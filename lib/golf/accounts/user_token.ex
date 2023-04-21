@@ -1,5 +1,5 @@
 defmodule Golf.Accounts.UserToken do
-  use Ecto.Schema
+  use Golf.Schema
   import Ecto.Query
   alias Golf.Accounts.UserToken
 
