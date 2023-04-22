@@ -53,6 +53,7 @@ defmodule Golf.AccountsTest do
       {:error, changeset} = Accounts.register_user(%{})
 
       assert %{
+               username: ["can't be blank"],
                password: ["can't be blank"],
                email: ["can't be blank"]
              } = errors_on(changeset)
@@ -97,7 +98,7 @@ defmodule Golf.AccountsTest do
   describe "change_user_registration/2" do
     test "returns a changeset" do
       assert %Ecto.Changeset{} = changeset = Accounts.change_user_registration(%User{})
-      assert changeset.required == [:password, :email]
+      assert changeset.required == [:password, :email, :username]
     end
 
     test "allows fields to be set" do
