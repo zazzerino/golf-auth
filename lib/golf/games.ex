@@ -9,14 +9,16 @@ defmodule Golf.Games do
   alias Golf.Accounts.User
   alias Golf.Games.{Game, Player, Event}
 
-  @card_list for rank <- ~w(A 2 3 4 5 6 7 8 9 T J Q K),
+  @card_names for rank <- ~w(A 2 3 4 5 6 7 8 9 T J Q K),
                  suit <- ~w(C D H S),
                  do: rank <> suit
 
   @num_decks_to_use 2
+  @max_players 4
+  @hand_size 6
 
-  def new_deck(1), do: @card_list
-  def new_deck(n), do: @card_list ++ new_deck(n - 1)
+  def new_deck(1), do: @card_names
+  def new_deck(n), do: @card_names ++ new_deck(n - 1)
 
   def new_deck(), do: new_deck(1)
 
@@ -55,6 +57,38 @@ defmodule Golf.Games do
       Ecto.build_assoc(game, :players, %{user_id: user.id, turn: 0, host?: true})
     end)
     |> Repo.transaction()
+  end
+
+  def start_game(%Game{status: :init} = game) do
+    num_cards_to_deal = @hand_size * length(game.players)
+    {card_names, deck} = Enum.split(game.deck, num_cards_to_deal)
+
+    {:ok, card, deck} = deal_from_deck(deck)
+    table_cards = [card | game.table_cards]
+
+    game_changeset =
+      game
+      |> Game.changeset(%{status: :flip2, deck: deck, table_cards: table_cards})
+
+    hands =
+      Enum.map(card_names, fn name -> %{"name" => name, "face_up?" => false} end)
+      |> Enum.chunk_every(@hand_size)
+
+    player_changesets =
+      game.players
+      |> Enum.zip(hands)
+      |> Enum.map(fn {player, hand} -> Player.changeset(player, %{hand: hand}) end)
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:game, game_changeset)
+    |> update_players(player_changesets)
+    |> Repo.transaction()
+  end
+
+  defp update_players(multi, player_changesets) do
+    Enum.reduce(player_changesets, multi, fn player_cs, multi ->
+      Ecto.Multi.update(multi, {:player, player_cs.data.id}, player_cs)
+    end)
   end
 
   # @doc """

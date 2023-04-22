@@ -20,6 +20,6 @@ defmodule Golf.Games.Player do
   def changeset(player, attrs) do
     player
     |> cast(attrs, [:user_id, :game_id, :turn, :hand, :held_card, :host?])
-    |> validate_required([:user_id, :game_id, :turn, :hand, :held_card, :host?])
+    |> validate_required([:user_id, :game_id, :turn, :hand, :host?])
   end
 end

@@ -11,8 +11,11 @@ defmodule Golf.GamesTest do
 
       {:ok, %{game: game}} = Games.create_game(user)
 
-      game = Games.get_game(game.id, preloads: [players: :user])
-      IO.inspect(game)
+      game = Games.get_game(game.id, preloads: [:players])
+      Games.start_game(game)
+
+      Games.get_game(game.id, preloads: [:players])
+      |> IO.inspect()
     end
   end
 
