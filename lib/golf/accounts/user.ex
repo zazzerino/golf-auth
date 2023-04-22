@@ -9,6 +9,8 @@ defmodule Golf.Accounts.User do
     field :confirmed_at, :utc_datetime_usec
     field :username, :string
 
+    has_many :players, Golf.Games.Player
+
     timestamps()
   end
 
