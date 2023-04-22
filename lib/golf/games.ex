@@ -4,101 +4,107 @@ defmodule Golf.Games do
   """
 
   import Ecto.Query, warn: false
-  alias Golf.Repo
 
+  alias Golf.Repo
+  alias Golf.Accounts.User
   alias Golf.Games.Game
 
-  @doc """
-  Returns the list of games.
 
-  ## Examples
+  # def create_game(%User{} = host) do
 
-      iex> list_games()
-      [%Game{}, ...]
+  # end
 
-  """
-  def list_games do
-    Repo.all(Game)
-  end
+  # @doc """
+  # Returns the list of games.
 
-  @doc """
-  Gets a single game.
+  # ## Examples
 
-  Raises `Ecto.NoResultsError` if the Game does not exist.
+  #     iex> list_games()
+  #     [%Game{}, ...]
 
-  ## Examples
+  # """
+  # def list_games do
+  #   Repo.all(Game)
+  # end
 
-      iex> get_game!(123)
-      %Game{}
+  # @doc """
+  # Gets a single game.
 
-      iex> get_game!(456)
-      ** (Ecto.NoResultsError)
+  # Raises `Ecto.NoResultsError` if the Game does not exist.
 
-  """
-  def get_game!(id), do: Repo.get!(Game, id)
+  # ## Examples
 
-  @doc """
-  Creates a game.
+  #     iex> get_game!(123)
+  #     %Game{}
 
-  ## Examples
+  #     iex> get_game!(456)
+  #     ** (Ecto.NoResultsError)
 
-      iex> create_game(%{field: value})
-      {:ok, %Game{}}
+  # """
+  # def get_game!(id), do: Repo.get!(Game, id)
 
-      iex> create_game(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+  # @doc """
+  # Creates a game.
 
-  """
-  def create_game(attrs \\ %{}) do
-    %Game{}
-    |> Game.changeset(attrs)
-    |> Repo.insert()
-  end
+  # ## Examples
 
-  @doc """
-  Updates a game.
+  #     iex> create_game(%{field: value})
+  #     {:ok, %Game{}}
 
-  ## Examples
+  #     iex> create_game(%{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
 
-      iex> update_game(game, %{field: new_value})
-      {:ok, %Game{}}
+  # """
+  # def create_game(attrs \\ %{}) do
+  #   %Game{}
+  #   |> Game.changeset(attrs)
+  #   |> Repo.insert()
+  # end
 
-      iex> update_game(game, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+  # @doc """
+  # Updates a game.
 
-  """
-  def update_game(%Game{} = game, attrs) do
-    game
-    |> Game.changeset(attrs)
-    |> Repo.update()
-  end
+  # ## Examples
 
-  @doc """
-  Deletes a game.
+  #     iex> update_game(game, %{field: new_value})
+  #     {:ok, %Game{}}
 
-  ## Examples
+  #     iex> update_game(game, %{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
 
-      iex> delete_game(game)
-      {:ok, %Game{}}
+  # """
+  # def update_game(%Game{} = game, attrs) do
+  #   game
+  #   |> Game.changeset(attrs)
+  #   |> Repo.update()
+  # end
 
-      iex> delete_game(game)
-      {:error, %Ecto.Changeset{}}
+  # @doc """
+  # Deletes a game.
 
-  """
-  def delete_game(%Game{} = game) do
-    Repo.delete(game)
-  end
+  # ## Examples
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking game changes.
+  #     iex> delete_game(game)
+  #     {:ok, %Game{}}
 
-  ## Examples
+  #     iex> delete_game(game)
+  #     {:error, %Ecto.Changeset{}}
 
-      iex> change_game(game)
-      %Ecto.Changeset{data: %Game{}}
+  # """
+  # def delete_game(%Game{} = game) do
+  #   Repo.delete(game)
+  # end
 
-  """
-  def change_game(%Game{} = game, attrs \\ %{}) do
-    Game.changeset(game, attrs)
-  end
+  # @doc """
+  # Returns an `%Ecto.Changeset{}` for tracking game changes.
+
+  # ## Examples
+
+  #     iex> change_game(game)
+  #     %Ecto.Changeset{data: %Game{}}
+
+  # """
+  # def change_game(%Game{} = game, attrs \\ %{}) do
+  #   Game.changeset(game, attrs)
+  # end
 end

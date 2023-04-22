@@ -11,6 +11,7 @@ defmodule Golf.Games.Player do
     field :hand, {:array, :map}, default: []
     field :held_card, :string
     field :turn, :integer
+    field :host?, :boolean, default: false
 
     timestamps(updated_at: false)
   end
@@ -18,7 +19,7 @@ defmodule Golf.Games.Player do
   @doc false
   def changeset(player, attrs) do
     player
-    |> cast(attrs, [:user_id, :game_id, :turn, :hand, :held_card])
-    |> validate_required([:user_id, :game_id, :turn, :hand, :held_card])
+    |> cast(attrs, [:user_id, :game_id, :turn, :hand, :held_card, :host?])
+    |> validate_required([:user_id, :game_id, :turn, :hand, :held_card, :host?])
   end
 end
