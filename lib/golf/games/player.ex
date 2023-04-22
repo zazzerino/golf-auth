@@ -6,6 +6,8 @@ defmodule Golf.Games.Player do
     belongs_to :user, Golf.Accounts.User
     belongs_to :game, Golf.Games.Game
 
+    has_many :events, Golf.Games.Event
+
     field :hand, {:array, :map}, default: []
     field :held_card, :string
     field :turn, :integer

@@ -3,8 +3,8 @@ defmodule Golf.Repo.Migrations.CreatePlayers do
 
   def change do
     create table(:players) do
-      add :user_id, references(:users, on_delete: :nothing)
       add :game_id, references(:games, on_delete: :delete_all)
+      add :user_id, references(:users)
 
       add :turn, :integer
       add :hand, {:array, :map}
