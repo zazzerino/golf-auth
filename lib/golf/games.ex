@@ -7,12 +7,55 @@ defmodule Golf.Games do
 
   alias Golf.Repo
   alias Golf.Accounts.User
-  alias Golf.Games.Game
+  alias Golf.Games.{Game, Player, Event}
 
+  @card_list for rank <- ~w(A 2 3 4 5 6 7 8 9 T J Q K),
+                 suit <- ~w(C D H S),
+                 do: rank <> suit
 
-  # def create_game(%User{} = host) do
+  @num_decks_to_use 2
 
-  # end
+  def new_deck(1), do: @card_list
+  def new_deck(n), do: @card_list ++ new_deck(n - 1)
+
+  def new_deck(), do: new_deck(1)
+
+  def deal_from_deck([], _) do
+    {:error, :empty_deck}
+  end
+
+  def deal_from_deck(deck, n) when length(deck) < n do
+    {:error, :not_enough_cards}
+  end
+
+  def deal_from_deck(deck, n) do
+    {cards, deck} = Enum.split(deck, n)
+    {:ok, cards, deck}
+  end
+
+  def deal_from_deck(deck) do
+    with {:ok, [card], deck} <- deal_from_deck(deck, 1) do
+      {:ok, card, deck}
+    end
+  end
+
+  def get_game(game_id, opts \\ []) do
+    preloads = Keyword.get(opts, :preloads, [])
+
+    Repo.get(Game, game_id)
+    |> Repo.preload(preloads)
+  end
+
+  def create_game(%User{} = user) do
+    deck = new_deck(@num_decks_to_use) |> Enum.shuffle()
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:game, %Game{status: :init, deck: deck, table_cards: [], turn: 0})
+    |> Ecto.Multi.insert(:player, fn %{game: game} ->
+      Ecto.build_assoc(game, :players, %{user_id: user.id, turn: 0, host?: true})
+    end)
+    |> Repo.transaction()
+  end
 
   # @doc """
   # Returns the list of games.

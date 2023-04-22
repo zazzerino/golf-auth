@@ -1,7 +1,20 @@
 defmodule Golf.GamesTest do
   use Golf.DataCase
-
+  import Golf.AccountsFixtures
   alias Golf.Games
+
+  describe "games" do
+    alias Golf.Games.Game
+
+    test "create_game/1" do
+      user = user_fixture()
+
+      {:ok, %{game: game}} = Games.create_game(user)
+
+      game = Games.get_game(game.id, preloads: [players: :user])
+      IO.inspect(game)
+    end
+  end
 
   # describe "games" do
   #   alias Golf.Games.Game
