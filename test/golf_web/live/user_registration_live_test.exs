@@ -42,7 +42,12 @@ defmodule GolfWeb.UserRegistrationLiveTest do
 
       username = valid_username()
       email = unique_user_email()
-      form = form(lv, "#registration_form", user: valid_user_attributes(username: username, email: email))
+
+      form =
+        form(lv, "#registration_form",
+          user: valid_user_attributes(username: username, email: email)
+        )
+
       render_submit(form)
       conn = follow_trigger_action(form, conn)
 

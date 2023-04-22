@@ -10,12 +10,14 @@ defmodule Golf.Games do
   alias Golf.Games.{Game, Player, Event}
 
   @card_names for rank <- ~w(A 2 3 4 5 6 7 8 9 T J Q K),
-                 suit <- ~w(C D H S),
-                 do: rank <> suit
+                  suit <- ~w(C D H S),
+                  do: rank <> suit
 
   @num_decks_to_use 2
   @max_players 4
   @hand_size 6
+
+  # game logic
 
   def new_deck(1), do: @card_names
   def new_deck(n), do: @card_names ++ new_deck(n - 1)
@@ -41,12 +43,24 @@ defmodule Golf.Games do
     end
   end
 
+  def playable_cards(%Game{}, %Player{}) do
+    []
+  end
+
+  def current_player_turn(%Game{}) do
+    0
+  end
+
+  # game queries
+
   def get_game(game_id, opts \\ []) do
     preloads = Keyword.get(opts, :preloads, [])
 
     Repo.get(Game, game_id)
     |> Repo.preload(preloads)
   end
+
+  # game db updates
 
   def create_game(%User{} = user) do
     deck = new_deck(@num_decks_to_use) |> Enum.shuffle()
@@ -89,6 +103,10 @@ defmodule Golf.Games do
     Enum.reduce(player_changesets, multi, fn player_cs, multi ->
       Ecto.Multi.update(multi, {:player, player_cs.data.id}, player_cs)
     end)
+  end
+
+  def handle_game_event(%Game{} = game, %Player{}, %Event{}) do
+    game
   end
 
   # @doc """

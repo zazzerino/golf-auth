@@ -3,7 +3,9 @@ defmodule Golf.Games.Game do
   import Ecto.Changeset
 
   schema "games" do
-    field :status, Ecto.Enum, values: [:init, :flip2, :take, :hold, :flip, :last_take, :last_hold, :last_flip, :over]
+    field :status, Ecto.Enum,
+      values: [:init, :flip2, :take, :hold, :flip, :last_take, :last_hold, :last_flip, :over]
+
     field :deck, {:array, :string}
     field :table_cards, {:array, :string}
     field :turn, :integer
