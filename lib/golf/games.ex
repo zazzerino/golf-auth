@@ -17,6 +17,16 @@ defmodule Golf.Games do
   @max_players 4
   @hand_size 6
 
+  def broadcast_game(game_id) when is_integer(game_id) do
+    game = get_game(game_id, preloads: [players: :user])
+
+    Phoenix.PubSub.broadcast(
+      Golf.PubSub,
+      "game:#{game_id}",
+      {:game, game}
+    )
+  end
+
   # game logic
 
   def new_deck(1), do: @card_names
@@ -60,6 +70,11 @@ defmodule Golf.Games do
     |> Repo.preload(preloads)
   end
 
+  def game_exists?(game_id) when is_integer(game_id) do
+    from(g in Game, where: g.id == ^game_id)
+    |> Repo.exists?()
+  end
+
   # game db updates
 
   def create_game(%User{} = user) do
@@ -93,10 +108,14 @@ defmodule Golf.Games do
       |> Enum.zip(hands)
       |> Enum.map(fn {player, hand} -> Player.changeset(player, %{hand: hand}) end)
 
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:game, game_changeset)
-    |> update_players(player_changesets)
-    |> Repo.transaction()
+    {:ok, %{game: game}} =
+      Ecto.Multi.new()
+      |> Ecto.Multi.update(:game, game_changeset)
+      |> update_players(player_changesets)
+      |> Repo.transaction()
+
+    broadcast_game(game.id)
+    {:ok, game}
   end
 
   defp update_players(multi, player_changesets) do

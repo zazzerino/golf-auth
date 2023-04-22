@@ -82,4 +82,22 @@ defmodule GolfWeb.Router do
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end
   end
+
+  scope "/games", GolfWeb do
+    pipe_through [:browser]
+
+    live_session :current_game_user,
+      on_mount: [{GolfWeb.UserAuth, :mount_current_user}] do
+      live "/:game_id", GameLive
+    end
+  end
+
+  scope "/games", GolfWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :required_authenticated_game_user,
+      on_mount: [{GolfWeb.UserAuth, :ensure_authenticated}] do
+      post "/create", GameController, :create_game
+    end
+  end
 end

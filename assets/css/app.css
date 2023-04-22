@@ -3,3 +3,485 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+:root {
+  --game-width: 600px;
+  --game-height: 600px;
+
+  --card-width: 60px;
+  --card-height: 84px;
+
+  --animation-time: 1.5s;
+
+  --deck-x: calc(var(--card-width) / -2);
+  --deck-y: 0px;
+
+  --table-x: calc(var(--card-width) / 2);
+  --table-y: 0px;
+
+  --hand-bottom-x: 0px;
+  --hand-bottom-y: calc(var(--game-height) / 2 - var(--card-height));
+
+  --hand-left-x: calc(var(--game-width) / -2 + var(--card-height));
+  --hand-left-y: 0px;
+
+  --hand-top-x: 0px;
+  --hand-top-y: calc(var(--game-height) / -2 + var(--card-height));
+
+  --hand-right-x: calc(var(--game-width) / 2 - var(--card-height));
+  --hand-right-y: 0px;
+
+  --held-card-bottom-x: calc(var(--card-width) * 2.5);
+  --held-card-bottom-y: var(--hand-bottom-y);
+
+  --held-card-left-x: var(--hand-left-x);
+  --held-card-left-y: calc(var(--card-width) * 2.5);
+
+  --held-card-top-x: calc(var(--card-width) * -2.5);
+  --held-card-top-y: var(--hand-top-y);
+
+  --held-card-right-x: var(--hand-right-x);
+  --held-card-right-y: calc(var(--card-width) * -2.5);
+}
+
+.game-svg {
+  background-color: seagreen;
+}
+
+.card.highlight {
+  filter: drop-shadow(0 0 0.5rem rgba(173, 255, 47, 1.0));
+  cursor: pointer;
+}
+
+g.hand.bottom {
+  transform: translate(var(--hand-bottom-x), var(--hand-bottom-y));
+}
+
+g.hand.left {
+  transform: translate(var(--hand-left-x), var(--hand-left-y)) 
+             rotate(90deg);
+}
+
+g.hand.top {
+  transform: translate(var(--hand-top-x), var(--hand-top-y)) 
+             rotate(180deg);
+}
+
+g.hand.right {
+  transform: translate(var(--hand-right-x), var(--hand-right-y)) 
+             rotate(270deg);
+}
+
+/*
+.card.held.bottom {
+  transform: translate(var(--held-card-bottom-x), var(--held-card-bottom-y));
+}
+
+.card.held.left {
+  transform: translate(var(--held-card-left-x), var(--held-card-left-y))
+             rotate(90deg);
+}
+
+.card.held.top {
+  transform: translate(var(--held-card-top-x), var(--held-card-top-y))
+             rotate(180deg);
+}
+
+.card.held.right {
+  transform: translate(var(--held-card-right-x), var(--held-card-right-y))
+             rotate(270deg);
+}
+*/
+
+/*
+.game-svg text {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: mediumorchid;
+  filter: drop-shadow(0 0 0.3rem rgba(173, 255, 47, 1.0));  
+}
+
+.waiting-message {
+  font-size: 250%;
+}
+
+.game-over-message {
+  font-size: 500%;
+}
+
+.player-display {
+  fill: mediumorchid;
+  filter: drop-shadow(0 0 0.3rem rgba(173, 255, 47, 1.0));
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.player-display.bottom {
+  transform: translate(-33%, var(--hand-bottom-y));
+}
+
+.player-display.left {
+  transform: translate(var(--hand-left-x), -33%)
+             rotate(90deg);
+}
+
+.player-display.top {
+  transform: translate(33%, var(--hand-top-y));
+}
+
+#use-table-cards {
+  pointer-events: none;
+}
+
+@keyframes deal-deck {
+  from {
+    transform: translateY(calc(var(--game-height) / -2)) rotate(90deg);
+  }
+}
+
+.card.deck.deal {
+  animation: deal-deck var(--animation-time);
+}
+
+@keyframes slide-from-deck {
+  from {
+    transform: translate(var(--deck-x), var(--deck-y));
+  }
+}
+
+.card.slide-from-deck {
+  animation: slide-from-deck var(--animation-time);
+}
+
+@keyframes slide-from-table {
+  from {
+    transform: translate(var(--table-x), var(--table-y));
+  }
+}
+
+.card.slide-from-table {
+  animation: slide-from-table var(--animation-time);
+}
+
+@keyframes slide-from-held-bottom {
+  from {
+    transform: translate(calc(var(--held-card-bottom-x) - var(--card-width) / 2),
+                         var(--held-card-bottom-y));
+  }
+}
+
+.card.table.slide-from-held-bottom {
+  animation: slide-from-held-bottom var(--animation-time);
+}
+
+@keyframes slide-from-held-left {
+  from {
+    transform: translate(var(--held-card-left-x), 
+                         calc(var(--held-card-left-y) - var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-held-left {
+  animation: slide-from-held-left var(--animation-time);
+}
+
+@keyframes slide-from-held-top {
+  from {
+    transform: translate(calc(var(--held-card-top-x) - var(--card-width) / 2), 
+                         var(--held-card-top-y));
+  }
+}
+
+.card.table.slide-from-held-top {
+  animation: slide-from-held-top var(--animation-time);
+}
+
+@keyframes slide-from-held-right {
+  from {
+    transform: translate(var(--held-card-right-x), 
+                         calc(var(--held-card-right-y) - var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-held-right {
+  animation: slide-from-held-right var(--animation-time);
+}
+
+@keyframes slide-from-hand-0-bottom {
+  from {
+    transform: translate(calc(var(--hand-bottom-x) - var(--card-width) * 1.5), 
+                         calc(var(--hand-bottom-y) - var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-0-bottom {
+  animation: slide-from-hand-0-bottom var(--animation-time);
+}
+
+@keyframes slide-from-hand-1-bottom {
+  from {
+    transform: translate(calc(var(--hand-bottom-x) - var(--card-width) / 2),
+                         calc(var(--hand-bottom-y) - var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-1-bottom {
+  animation: slide-from-hand-1-bottom var(--animation-time);
+}
+
+@keyframes slide-from-hand-2-bottom {
+  from {
+    transform: translate(calc(var(--hand-bottom-x) + var(--card-width) / 2), 
+                         calc(var(--hand-bottom-y) - var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-2-bottom {
+  animation: slide-from-hand-2-bottom var(--animation-time);
+}
+
+@keyframes slide-from-hand-3-bottom {
+  from {
+    transform: translate(calc(var(--hand-bottom-x) - var(--card-width) * 1.5), 
+                         calc(var(--hand-bottom-y) + var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-3-bottom {
+  animation: slide-from-hand-3-bottom var(--animation-time);
+}
+
+@keyframes slide-from-hand-4-bottom {
+  from {
+    transform: translate(calc(var(--hand-bottom-x) - var(--card-width) / 2), 
+                         calc(var(--hand-bottom-y) + var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-4-bottom {
+  animation: slide-from-hand-4-bottom var(--animation-time);
+}
+
+@keyframes slide-from-hand-5-bottom {
+  from {
+    transform: translate(calc(var(--hand-bottom-x) + var(--card-width) / 2),
+                         calc(var(--hand-bottom-y) + var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-5-bottom {
+  animation: slide-from-hand-5-bottom var(--animation-time);
+}
+
+@keyframes slide-from-hand-0-left {
+  from {
+    transform: translate(calc(var(--hand-left-x) + var(--card-height) / 2),
+                         calc(var(--hand-left-y) - var(--card-width) * 1.5))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-0-left {
+  animation: slide-from-hand-0-left var(--animation-time);
+}
+
+@keyframes slide-from-hand-1-left {
+  from {
+    transform: translate(calc(var(--hand-left-x) + var(--card-height) / 2),
+                         calc(var(--hand-left-y) - var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-1-left {
+  animation: slide-from-hand-1-left var(--animation-time);
+}
+
+@keyframes slide-from-hand-2-left {
+  from {
+    transform: translate(calc(var(--hand-left-x) + var(--card-height) / 2),
+                         calc(var(--hand-left-y) + var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-2-left {
+  animation: slide-from-hand-2-left var(--animation-time);
+}
+
+@keyframes slide-from-hand-3-left {
+  from {
+    transform: translate(calc(var(--hand-left-x) - var(--card-height) / 2),
+                         calc(var(--hand-left-y) - var(--card-width) * 1.5))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-3-left {
+  animation: slide-from-hand-3-left var(--animation-time);
+}
+
+@keyframes slide-from-hand-4-left {
+  from {
+    transform: translate(calc(var(--hand-left-x) - var(--card-height) / 2),
+                         calc(var(--hand-left-y) - var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-4-left {
+  animation: slide-from-hand-4-left var(--animation-time);
+}
+
+@keyframes slide-from-hand-5-left {
+  from {
+    transform: translate(calc(var(--hand-left-x) - var(--card-height) / 2),
+                         calc(var(--hand-left-y) + var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-5-left {
+  animation: slide-from-hand-5-left var(--animation-time);
+}
+
+@keyframes slide-from-hand-0-top {
+  from {
+    transform: translate(calc(var(--hand-top-x) + var(--card-width) / 2),
+                         calc(var(--hand-top-y) + var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-0-top {
+  animation: slide-from-hand-0-top var(--animation-time);
+}
+
+@keyframes slide-from-hand-1-top {
+  from {
+    transform: translate(calc(var(--hand-top-x) - var(--card-width) / 2),
+                         calc(var(--hand-top-y) + var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-1-top {
+  animation: slide-from-hand-1-top var(--animation-time);
+}
+
+@keyframes slide-from-hand-2-top {
+  from {
+    transform: translate(calc(var(--hand-top-x) - var(--card-width) * 1.5),
+                         calc(var(--hand-top-y) + var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-2-top {
+  animation: slide-from-hand-2-top var(--animation-time);
+}
+
+@keyframes slide-from-hand-3-top {
+  from {
+    transform: translate(calc(var(--hand-top-x) + var(--card-width) / 2),
+                         calc(var(--hand-top-y) - var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-3-top {
+  animation: slide-from-hand-3-top var(--animation-time);
+}
+
+@keyframes slide-from-hand-4-top {
+  from {
+    transform: translate(calc(var(--hand-top-x) - var(--card-width) / 2),
+                         calc(var(--hand-top-y) - var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-4-top {
+  animation: slide-from-hand-4-top var(--animation-time);
+}
+
+@keyframes slide-from-hand-5-top {
+  from {
+    transform: translate(calc(var(--hand-top-x) - var(--card-width) * 1.5),
+                         calc(var(--hand-top-y) - var(--card-height) / 2));
+  }
+}
+
+.card.table.slide-from-hand-5-top {
+  animation: slide-from-hand-5-top var(--animation-time);
+}
+
+@keyframes slide-from-hand-0-right {
+  from {
+    transform: translate(calc(var(--hand-right-x) - var(--card-height) / 2),
+                         calc(var(--hand-right-y) + var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-0-right {
+  animation: slide-from-hand-0-right var(--animation-time);
+}
+
+@keyframes slide-from-hand-1-right {
+  from {
+    transform: translate(calc(var(--hand-right-x) - var(--card-height) / 2),
+                         calc(var(--hand-right-y) - var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-1-right {
+  animation: slide-from-hand-1-right var(--animation-time);
+}
+
+@keyframes slide-from-hand-2-right {
+  from {
+    transform: translate(calc(var(--hand-right-x) - var(--card-height) / 2),
+                         calc(var(--hand-right-y) - var(--card-width) * 1.5))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-2-right {
+  animation: slide-from-hand-2-right var(--animation-time);
+}
+
+@keyframes slide-from-hand-3-right {
+  from {
+    transform: translate(calc(var(--hand-right-x) + var(--card-height) / 2),
+                         calc(var(--hand-right-y) + var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-3-right {
+  animation: slide-from-hand-3-right var(--animation-time);
+}
+
+@keyframes slide-from-hand-4-right {
+  from {
+    transform: translate(calc(var(--hand-right-x) + var(--card-height) / 2),
+                         calc(var(--hand-right-y) - var(--card-width) / 2))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-4-right {
+  animation: slide-from-hand-4-right var(--animation-time);
+}
+
+@keyframes slide-from-hand-5-right {
+  from {
+    transform: translate(calc(var(--hand-right-x) + var(--card-height) / 2),
+                         calc(var(--hand-right-y) - var(--card-width) * 1.5))
+               rotate(90deg);
+  }
+}
+
+.card.table.slide-from-hand-5-right {
+  animation: slide-from-hand-5-right var(--animation-time);
+}
+*/
