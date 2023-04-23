@@ -138,7 +138,7 @@ defmodule GolfWeb.GameLive do
 
     players =
       game.players
-      |> assign_positions()
+      |> assign_positions_and_scores()
       |> maybe_rotate(user_index, user_is_playing?)
 
     assign(socket,
@@ -151,17 +151,23 @@ defmodule GolfWeb.GameLive do
   end
 
   defp assign_game_data(socket, game) do
+    players =
+      game.players
+      |> assign_positions_and_scores()
+
     assign(socket,
       game: game,
-      players: game.players
+      players: players
     )
   end
 
-  defp assign_positions(players) do
+  defp assign_positions_and_scores(players) do
     positions = hand_positions(length(players))
 
     Enum.zip_with(players, positions, fn player, position ->
-      Map.put(player, :position, position)
+      player
+      |> Map.put(:position, position)
+      |> Map.put(:score, Games.score(player.hand))
     end)
   end
 

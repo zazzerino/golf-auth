@@ -128,6 +128,79 @@ defmodule Golf.Games do
     []
   end
 
+  def rank_value(rank) when is_integer(rank) do
+    case rank do
+      ?K -> 0
+      ?A -> 1
+      ?2 -> 2
+      ?3 -> 3
+      ?4 -> 4
+      ?5 -> 5
+      ?6 -> 6
+      ?7 -> 7
+      ?8 -> 8
+      ?9 -> 9
+      r when r in [?T, ?J, ?Q] -> 10
+    end
+  end
+
+  defp rank_totals(ranks, total) do
+    case ranks do
+      # all match
+      [a, a, a, a, a, a] when is_integer(a) ->
+        -40
+
+      # outer cols match
+      [a, b, a, a, c, a] when is_integer(a) ->
+        rank_totals([b, c], total - 20)
+
+      # left 2 cols match
+      [a, a, b, a, a, c] when is_integer(a) ->
+        rank_totals([b, c], total - 10)
+
+      # right 2 cols match
+      [a, b, b, c, b, b] when is_integer(b) ->
+        rank_totals([a, c], total - 10)
+
+      # left col match
+      [a, b, c, a, d, e] when is_integer(a) ->
+        rank_totals([b, c, d, e], total)
+
+      # middle col match
+      [a, b, c, d, b, e] when is_integer(b) ->
+        rank_totals([a, c, d, e], total)
+
+      # right col match
+      [a, b, c, d, e, c] when is_integer(c) ->
+        rank_totals([a, b, d, e], total)
+
+      # left col match, 2nd pass
+      [a, b, a, c] when is_integer(a) ->
+        rank_totals([b, c], total)
+
+      # right col match, 2nd pass
+      [a, b, c, b] when is_integer(b) ->
+        rank_totals([a, c], total)
+
+      [a, a] when is_integer(a) ->
+        total
+
+      _ ->
+        Enum.reject(ranks, &is_nil/1)
+        |> Enum.map(&rank_value/1)
+        |> Enum.sum()
+        |> Kernel.+(total)
+    end
+  end
+
+  defp maybe_rank(%{"name" => <<rank, _>>, "face_up?" => true}), do: rank
+  defp maybe_rank(_), do: nil
+
+  def score(hand) do
+    Enum.map(hand, &maybe_rank/1)
+    |> rank_totals(0)
+  end
+
   # game queries
 
   def get_game(game_id, opts \\ []) do
@@ -176,26 +249,35 @@ defmodule Golf.Games do
       Enum.map(card_names, fn name -> %{"name" => name, "face_up?" => false} end)
       |> Enum.chunk_every(@hand_size)
 
-    player_changesets =
-      game.players
-      |> Enum.zip(hands)
-      |> Enum.map(fn {player, hand} -> Player.changeset(player, %{hand: hand}) end)
-
     {:ok, %{game: game} = multi} =
       Ecto.Multi.new()
-      |> Ecto.Multi.update(:game, Game.changeset(game, %{status: :flip2, deck: deck, table_cards: table_cards}))
-      |> update_players(player_changesets)
+      |> Ecto.Multi.update(
+        :game,
+        Game.changeset(game, %{status: :flip2, deck: deck, table_cards: table_cards})
+      )
+      |> update_player_hands(game.players, hands)
       |> Repo.transaction()
 
     broadcast_game(game.id)
     {:ok, multi}
   end
 
-  defp update_players(multi, player_changesets) do
-    Enum.reduce(player_changesets, multi, fn player_cs, multi ->
-      Ecto.Multi.update(multi, {:player, player_cs.data.id}, player_cs)
+  defp update_player_hands(multi, players, hands) do
+    changesets =
+      players
+      |> Enum.zip(hands)
+      |> Enum.map(fn {player, hand} -> Player.changeset(player, %{hand: hand}) end)
+
+    Enum.reduce(changesets, multi, fn cs, multi ->
+      Ecto.Multi.update(multi, {:player, cs.data.id}, cs)
     end)
   end
+
+  # defp update_players(multi, player_changesets) do
+  #   Enum.reduce(player_changesets, multi, fn player_cs, multi ->
+  #     Ecto.Multi.update(multi, {:player, player_cs.data.id}, player_cs)
+  #   end)
+  # end
 
   defp replace_player(players, player) do
     Enum.map(
@@ -368,98 +450,4 @@ defmodule Golf.Games do
     broadcast_game(game.id)
     {:ok, multi}
   end
-
-  # @doc """
-  # Returns the list of games.
-
-  # ## Examples
-
-  #     iex> list_games()
-  #     [%Game{}, ...]
-
-  # """
-  # def list_games do
-  #   Repo.all(Game)
-  # end
-
-  # @doc """
-  # Gets a single game.
-
-  # Raises `Ecto.NoResultsError` if the Game does not exist.
-
-  # ## Examples
-
-  #     iex> get_game!(123)
-  #     %Game{}
-
-  #     iex> get_game!(456)
-  #     ** (Ecto.NoResultsError)
-
-  # """
-  # def get_game!(id), do: Repo.get!(Game, id)
-
-  # @doc """
-  # Creates a game.
-
-  # ## Examples
-
-  #     iex> create_game(%{field: value})
-  #     {:ok, %Game{}}
-
-  #     iex> create_game(%{field: bad_value})
-  #     {:error, %Ecto.Changeset{}}
-
-  # """
-  # def create_game(attrs \\ %{}) do
-  #   %Game{}
-  #   |> Game.changeset(attrs)
-  #   |> Repo.insert()
-  # end
-
-  # @doc """
-  # Updates a game.
-
-  # ## Examples
-
-  #     iex> update_game(game, %{field: new_value})
-  #     {:ok, %Game{}}
-
-  #     iex> update_game(game, %{field: bad_value})
-  #     {:error, %Ecto.Changeset{}}
-
-  # """
-  # def update_game(%Game{} = game, attrs) do
-  #   game
-  #   |> Game.changeset(attrs)
-  #   |> Repo.update()
-  # end
-
-  # @doc """
-  # Deletes a game.
-
-  # ## Examples
-
-  #     iex> delete_game(game)
-  #     {:ok, %Game{}}
-
-  #     iex> delete_game(game)
-  #     {:error, %Ecto.Changeset{}}
-
-  # """
-  # def delete_game(%Game{} = game) do
-  #   Repo.delete(game)
-  # end
-
-  # @doc """
-  # Returns an `%Ecto.Changeset{}` for tracking game changes.
-
-  # ## Examples
-
-  #     iex> change_game(game)
-  #     %Ecto.Changeset{data: %Game{}}
-
-  # """
-  # def change_game(%Game{} = game, attrs \\ %{}) do
-  #   Game.changeset(game, attrs)
-  # end
 end

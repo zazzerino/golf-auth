@@ -91,6 +91,31 @@ g.hand.right {
              rotate(270deg);
 }
 
+.player-info {
+  fill: mediumorchid;
+  filter: drop-shadow(0 0 0.3rem rgba(173, 255, 47, 1.0));
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.player-info.bottom {
+  transform: translate(-33%, var(--hand-bottom-y));
+}
+
+.player-info.left {
+  transform: translate(var(--hand-left-x), -33%)
+             rotate(90deg);
+}
+
+.player-info.top {
+  transform: translate(33%, var(--hand-top-y));
+}
+
+.player-info.right {
+  transform: translate(var(--hand-right-x), 33%)
+             rotate(270deg);
+}
+
 /*
 .game-svg text {
   text-anchor: middle;
@@ -105,26 +130,6 @@ g.hand.right {
 
 .game-over-message {
   font-size: 500%;
-}
-
-.player-display {
-  fill: mediumorchid;
-  filter: drop-shadow(0 0 0.3rem rgba(173, 255, 47, 1.0));
-  text-anchor: middle;
-  dominant-baseline: middle;
-}
-
-.player-display.bottom {
-  transform: translate(-33%, var(--hand-bottom-y));
-}
-
-.player-display.left {
-  transform: translate(var(--hand-left-x), -33%)
-             rotate(90deg);
-}
-
-.player-display.top {
-  transform: translate(33%, var(--hand-top-y));
 }
 
 #use-table-cards {

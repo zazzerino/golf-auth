@@ -21,8 +21,8 @@ defmodule Golf.GamesTest do
       event = %Event{game_id: game.id, player_id: player.id, action: :flip, hand_index: 0}
       {:ok, _} = Games.handle_game_event(game, player, event)
 
-      # Games.get_game(game.id, preloads: [players: :user])
-      # |> IO.inspect()
+      Games.get_game(game.id, preloads: [players: :user])
+      |> IO.inspect()
     end
   end
 
