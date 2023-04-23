@@ -13,6 +13,8 @@ defmodule Golf.Games do
                   suit <- ~w(C D H S),
                   do: rank <> suit
 
+  @card_positions [:deck, :table, :held, :hand_0, :hand_1, :hand_2, :hand_3, :hand_4, :hand_5]
+
   @num_decks_to_use 2
   @max_players 4
   @hand_size 6
@@ -53,12 +55,65 @@ defmodule Golf.Games do
     end
   end
 
-  def playable_cards(%Game{}, %Player{}) do
+  def current_player_turn(%Game{} = game) do
+    num_players = length(game.players)
+    rem(game.turn, num_players)
+  end
+
+  def flip_card(hand, index) do
+    List.update_at(hand, index, fn card -> Map.put(card, "face_up?", true) end)
+  end
+
+  def swap_card(hand, card_name, index) do
+    old_card = Enum.at(hand, index) |> Map.get("name")
+    hand = List.replace_at(hand, index, %{"name" => card_name, "face_up?" => true})
+    {old_card, hand}
+  end
+
+  def num_cards_face_up(hand) do
+    Enum.count(hand, fn card -> card["face_up?"] end)
+  end
+
+  def all_have_two_face_up?(players) do
+    Enum.all?(players, fn p -> num_cards_face_up(p.hand) == 2 end)
+  end
+
+  def face_down_cards(hand) do
+    hand
+    |> Enum.with_index()
+    |> Enum.reject(fn {card, _} -> card["face_up?"] end)
+    |> Enum.map(fn {_, index} -> String.to_existing_atom("hand_#{index}") end)
+  end
+
+  def playable_cards(%Game{status: :flip2}, %Player{} = player) do
+    if num_cards_face_up(player.hand) < 2 do
+      face_down_cards(player.hand)
+    else
+      []
+    end
+  end
+
+  defguard is_players_turn(game, player) when rem(game.turn, length(game.players)) == player.turn
+
+  def playable_cards(%Game{} = game, %Player{} = player)
+      when not is_players_turn(game, player) do
     []
   end
 
-  def current_player_turn(%Game{}) do
-    0
+  def playable_cards(%Game{} = game, %Player{} = player) do
+    case game.status do
+      s when s in [:flip2, :flip] ->
+        face_down_cards(player.hand)
+
+      :take ->
+        [:deck, :table]
+
+      :hold ->
+        [:held, :hand_0, :hand_1, :hand_2, :hand_3, :hand_4, :hand_5]
+
+      _ ->
+        []
+    end
   end
 
   # game queries
@@ -70,8 +125,18 @@ defmodule Golf.Games do
     |> Repo.preload(preloads)
   end
 
+  def get_player_by_user_id(game_id, user_id) do
+    from(p in Player, where: p.game_id == ^game_id and p.user_id == ^user_id)
+    |> Repo.one()
+  end
+
   def game_exists?(game_id) when is_integer(game_id) do
     from(g in Game, where: g.id == ^game_id)
+    |> Repo.exists?()
+  end
+
+  def user_is_playing_game?(user_id, game_id) do
+    from(p in Player, where: p.user_id == ^user_id and p.game_id == ^game_id)
     |> Repo.exists?()
   end
 
@@ -108,20 +173,54 @@ defmodule Golf.Games do
       |> Enum.zip(hands)
       |> Enum.map(fn {player, hand} -> Player.changeset(player, %{hand: hand}) end)
 
-    {:ok, %{game: game}} =
+    {:ok, %{game: game} = multi} =
       Ecto.Multi.new()
       |> Ecto.Multi.update(:game, game_changeset)
       |> update_players(player_changesets)
       |> Repo.transaction()
 
     broadcast_game(game.id)
-    {:ok, game}
+    {:ok, multi}
   end
 
   defp update_players(multi, player_changesets) do
     Enum.reduce(player_changesets, multi, fn player_cs, multi ->
       Ecto.Multi.update(multi, {:player, player_cs.data.id}, player_cs)
     end)
+  end
+
+  defp replace_player(players, player) do
+    Enum.map(
+      players,
+      fn p -> if p.id == player.id, do: player, else: p end
+    )
+  end
+
+  def handle_game_event(
+        %Game{status: :flip2} = game,
+        %Player{} = player,
+        %Event{action: :flip} = event
+      ) do
+    if num_cards_face_up(player.hand) < 2 do
+      hand = flip_card(player.hand, event.hand_index)
+      player_cs = Player.changeset(player, %{hand: hand})
+
+      {:ok, %{game: game} = multi} =
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert(:event, event)
+        |> Ecto.Multi.update(:player, player_cs)
+        |> Ecto.Multi.update(:game, fn %{player: player} ->
+          players = replace_player(game.players, player)
+          status = if all_have_two_face_up?(players), do: :take, else: :flip2
+          Game.changeset(game, %{status: status})
+        end)
+        |> Repo.transaction()
+
+      broadcast_game(game.id)
+      {:ok, multi}
+    else
+      {:error, :already_flipped_two}
+    end
   end
 
   def handle_game_event(%Game{} = game, %Player{}, %Event{}) do

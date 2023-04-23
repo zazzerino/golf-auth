@@ -2,6 +2,7 @@ defmodule Golf.GamesTest do
   use Golf.DataCase
   import Golf.AccountsFixtures
   alias Golf.Games
+  alias Golf.Games.{Event}
 
   describe "games" do
     alias Golf.Games.Game
@@ -10,9 +11,15 @@ defmodule Golf.GamesTest do
       user = user_fixture()
 
       {:ok, %{game: game}} = Games.create_game(user)
+      assert game.status == :init
 
       game = Games.get_game(game.id, preloads: [:players])
-      {:ok, _} = Games.start_game(game)
+      {:ok, %{game: game}} = Games.start_game(game)
+      assert game.status == :flip2
+
+      player = Games.get_player_by_user_id(game.id, user.id)
+      event = %Event{game_id: game.id, player_id: player.id, action: :flip, hand_index: 0}
+      {:ok, _} = Games.handle_game_event(game, player, event)
 
       # Games.get_game(game.id, preloads: [players: :user])
       # |> IO.inspect()

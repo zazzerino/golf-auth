@@ -1,17 +1,23 @@
 <.header>Game <%= @game_id %></.header>
 
 <svg class="game-svg" width={game_width()} height={game_height()} viewBox={game_viewbox()}>
-  <.deck
-    :if={@game}
-    game_status={@game.status}
-    playable={:deck in @playable_cards}
-  />
+  <.deck :if={@game} game_status={@game.status} playable={:deck in @playable_cards} />
 
   <.table_cards
-    table_card_0={@game && Enum.at(@game.table_cards, 0)}
-    table_card_1={@game && Enum.at(@game.table_cards, 1)}
+    first={@game && Enum.at(@game.table_cards, 0)}
+    second={@game && Enum.at(@game.table_cards, 1)}
     playable={:table in @playable_cards}
   />
+
+  <%= for player <- @players do %>
+    <.hand
+      cards={player.hand}
+      position={player.position}
+      player_id={player.id}
+      user_player_id={@user_player && @user_player.id}
+      playable_cards={@playable_cards}
+    />
+  <% end %>
 </svg>
 
 <.button :if={@can_start_game?} class="mt-4" phx-click="start_game">

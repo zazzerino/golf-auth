@@ -85,15 +85,15 @@ defmodule GolfWeb.GameComponents do
     """
   end
 
-  attr :table_card_0, :string, required: true
-  attr :table_card_1, :string, required: true
+  attr :first, :string, required: true
+  attr :second, :string, required: true
   attr :playable, :boolean, required: true
 
   def table_cards(assigns) do
     ~H"""
     <g id="table-cards">
-      <.table_card_1 name={@table_card_1} />
-      <.table_card_0 name={@table_card_0} playable={@playable} />
+      <.table_card_1 name={@second} />
+      <.table_card_0 name={@first} playable={@playable} />
     </g>
     """
   end
@@ -122,13 +122,16 @@ defmodule GolfWeb.GameComponents do
     end
   end
 
-  def hand_card_playable?(player_id, user_player_id, playable_cards, index)
-      when player_id == user_player_id do
+  def hand_index_playable?(playable_cards, index) do
     card = String.to_existing_atom("hand_#{index}")
     card in playable_cards
   end
 
-  def hand_card_playable?(_, _, _, _), do: false
+  def hand_card_class(player_id, user_player_id, playable_cards, index) do
+    if player_id == user_player_id and hand_index_playable?(playable_cards, index) do
+      "highlight"
+    end
+  end
 
   attr :cards, :list, required: true
   attr :position, :atom, required: true
@@ -141,10 +144,7 @@ defmodule GolfWeb.GameComponents do
     <g class={"hand #{@position}"}>
       <%= for {card, index} <- Enum.with_index(@cards) do %>
         <.card_image
-          class={
-            if hand_card_playable?(@player_id, @user_player_id, @playable_cards, index),
-              do: "highlight"
-          }
+          class={hand_card_class(@player_id, @user_player_id, @playable_cards, index)}
           name={if card["face_up?"], do: card["name"], else: card_back()}
           x={hand_card_x(index)}
           y={hand_card_y(index)}
