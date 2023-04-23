@@ -159,6 +159,14 @@ defmodule GolfWeb.GameComponents do
     """
   end
 
+  def held_card_class(position, playable?) do
+    if playable? do
+      "held #{position} highlight"
+    else
+      "held #{position}"
+    end
+  end
+
   attr :name, :string, required: true
   attr :position, :atom, required: true
   attr :playable, :boolean, required: true
@@ -166,7 +174,7 @@ defmodule GolfWeb.GameComponents do
   def held_card(assigns) do
     ~H"""
     <.card_image
-      class={if @playable, do: "held #{@position} highlight", else: "held #{@position}"}
+      class={held_card_class(@position, @playable)}
       name={@name}
       phx-value-playable={@playable}
       phx-click="held_click"

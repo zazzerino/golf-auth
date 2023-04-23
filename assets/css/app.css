@@ -72,7 +72,6 @@ g.hand.right {
              rotate(270deg);
 }
 
-/*
 .card.held.bottom {
   transform: translate(var(--held-card-bottom-x), var(--held-card-bottom-y));
 }
@@ -91,7 +90,6 @@ g.hand.right {
   transform: translate(var(--held-card-right-x), var(--held-card-right-y))
              rotate(270deg);
 }
-*/
 
 /*
 .game-svg text {
