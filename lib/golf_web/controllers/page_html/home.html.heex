@@ -1,11 +1,14 @@
 <.flash_group flash={@flash} />
 
-<div>
-  <.header>Golf</.header>
+<.header>Golf</.header>
 
-  <.simple_form :if={@current_user} for={%{}} action={~p"/games/create"}>
-    <:actions>
-      <.button>New Game</.button>
-    </:actions>
-  </.simple_form>
-</div>
+<.table id="games" rows={@games}>
+  <:col :let={game} label="Game Id"><%= game.id %></:col>
+  <:col :let={game} label="Host"><%= game.host_username %></:col>
+</.table>
+
+<.simple_form :if={@current_user} for={%{}} action={~p"/games/create"}>
+  <:actions>
+    <.button>New Game</.button>
+  </:actions>
+</.simple_form>

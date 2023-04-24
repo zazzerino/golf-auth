@@ -25,14 +25,16 @@
       playable={:held in @playable_cards}
     />
 
-    <.player_info
-      name={player.user.username}
-      score={player.score}
-      position={player.position}
-    />
+    <.player_info name={player.username} score={player.score} position={player.position} />
   <% end %>
 </svg>
 
-<.button :if={@can_start_game?} class="mt-4" phx-click="start_game">
-  Start Game
-</.button>
+<div class="mt-4">
+  <.button :if={@can_start_game?} phx-click="start_game">
+    Start Game
+  </.button>
+
+  <.button :if={@can_join_game?} phx-click="join_game">
+    Join Game
+  </.button>
+</div>

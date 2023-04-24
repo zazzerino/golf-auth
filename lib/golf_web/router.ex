@@ -17,10 +17,19 @@ defmodule GolfWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # scope "/", GolfWeb do
+  #   pipe_through :browser
+
+  #   get "/", PageController, :home
+  # end
+
   scope "/", GolfWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :home_user,
+      on_mount: [{GolfWeb.UserAuth, :mount_current_user}] do
+      live "/", HomeLive
+    end
   end
 
   # Other scopes may use custom stacks.
@@ -72,7 +81,7 @@ defmodule GolfWeb.Router do
   end
 
   scope "/", GolfWeb do
-    pipe_through [:browser]
+    pipe_through :browser
 
     delete "/users/log_out", UserSessionController, :delete
 
@@ -84,7 +93,7 @@ defmodule GolfWeb.Router do
   end
 
   scope "/games", GolfWeb do
-    pipe_through [:browser]
+    pipe_through :browser
 
     live_session :current_game_user,
       on_mount: [{GolfWeb.UserAuth, :mount_current_user}] do

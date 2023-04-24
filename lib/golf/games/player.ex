@@ -13,6 +13,8 @@ defmodule Golf.Games.Player do
     field :turn, :integer
     field :host?, :boolean, default: false
 
+    field :username, :string
+
     timestamps(updated_at: false)
   end
 

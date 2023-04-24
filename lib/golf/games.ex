@@ -14,13 +14,16 @@ defmodule Golf.Games do
                   do: rank <> suit
 
   @card_positions [:deck, :table, :held, :hand_0, :hand_1, :hand_2, :hand_3, :hand_4, :hand_5]
+  def card_positions, do: @card_positions
 
   @num_decks_to_use 2
-  @max_players 4
   @hand_size 6
 
+  @max_players 4
+  def max_players, do: @max_players
+
   def broadcast_game(game_id) when is_integer(game_id) do
-    game = get_game(game_id, preloads: [players: :user])
+    game = get_game_and_players(game_id)
 
     Phoenix.PubSub.broadcast(
       Golf.PubSub,
@@ -210,9 +213,38 @@ defmodule Golf.Games do
     |> Repo.preload(preloads)
   end
 
-  def get_player_by_user_id(game_id, user_id) do
+  def get_game_and_players(game_id) do
+    player_query =
+      from(
+        p in Player,
+        where: p.game_id == ^game_id,
+        order_by: p.turn,
+        join: u in User,
+        on: u.id == p.user_id,
+        select: %Player{p | username: u.username}
+      )
+
+    Repo.get(Game, game_id)
+    |> Repo.preload(players: player_query)
+  end
+
+  def get_game_infos() do
+    from(g in Game,
+      where: g.status == :init,
+      join: p in Player,
+      on: p.game_id == g.id,
+      where: p.host?,
+      join: u in User,
+      on: u.id == p.user_id,
+      select: %{id: g.id, host_id: u.id, host_username: u.username}
+    )
+    |> Repo.all()
+  end
+
+  def get_player(game_id, user_id) do
     from(p in Player, where: p.game_id == ^game_id and p.user_id == ^user_id)
     |> Repo.one()
+    |> Repo.preload(:user)
   end
 
   def game_exists?(game_id) when is_integer(game_id) do
@@ -236,6 +268,17 @@ defmodule Golf.Games do
       Ecto.build_assoc(game, :players, %{user_id: user.id, turn: 0, host?: true})
     end)
     |> Repo.transaction()
+  end
+
+  def add_player_to_game(%Game{status: :init} = game, %User{} = user) do
+    turn = length(game.players)
+
+    {:ok, player} =
+      Ecto.build_assoc(game, :players, %{user_id: user.id, turn: turn})
+      |> Repo.insert()
+
+    broadcast_game(game.id)
+    {:ok, player}
   end
 
   def start_game(%Game{status: :init} = game) do
@@ -272,12 +315,6 @@ defmodule Golf.Games do
       Ecto.Multi.update(multi, {:player, cs.data.id}, cs)
     end)
   end
-
-  # defp update_players(multi, player_changesets) do
-  #   Enum.reduce(player_changesets, multi, fn player_cs, multi ->
-  #     Ecto.Multi.update(multi, {:player, player_cs.data.id}, player_cs)
-  #   end)
-  # end
 
   defp replace_player(players, player) do
     Enum.map(

@@ -5,6 +5,8 @@ defmodule GolfWeb.GameLive do
   alias Golf.Games
   alias Golf.Games.Event
 
+  @max_players Games.max_players()
+
   @impl true
   def mount(%{"game_id" => game_id}, _, socket) do
     with {game_id, _} <- Integer.parse(game_id),
@@ -22,7 +24,8 @@ defmodule GolfWeb.GameLive do
          players: [],
          playable_cards: [],
          user_player: nil,
-         can_start_game?: false
+         can_start_game?: false,
+         can_join_game?: false
        )}
     else
       _ ->
@@ -35,7 +38,7 @@ defmodule GolfWeb.GameLive do
 
   @impl true
   def handle_info({:get_game, game_id}, socket) do
-    game = Games.get_game(game_id, preloads: [players: :user])
+    game = Games.get_game_and_players(game_id)
     {:noreply, assign_game_data(socket, game)}
   end
 
@@ -48,6 +51,13 @@ defmodule GolfWeb.GameLive do
   def handle_event("start_game", _, %{assigns: %{user_player: player, game: game}} = socket)
       when is_struct(player) and player.host? do
     {:ok, _} = Games.start_game(game)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("join_game", _, %{assigns: %{current_user: user, game: game}} = socket)
+      when is_struct(user) and length(game.players) < @max_players do
+    {:ok, _} = Games.add_player_to_game(game, user)
     {:noreply, socket}
   end
 
@@ -133,20 +143,29 @@ defmodule GolfWeb.GameLive do
     user_is_playing? = Games.user_is_playing_game?(user.id, game.id)
     user_index = user_is_playing? && Enum.find_index(game.players, &(&1.user_id == user.id))
     user_player = user_index && Enum.at(game.players, user_index)
+
     can_start_game? = user_player && user_player.host? && game.status == :init
-    playable_cards = Games.playable_cards(game, user_player)
+    can_join_game? = not user_is_playing? and game.status == :init
+
+    playable_cards =
+      if user_is_playing? do
+        Games.playable_cards(game, user_player)
+      else
+        []
+      end
 
     players =
       game.players
-      |> assign_positions_and_scores()
       |> maybe_rotate(user_index, user_is_playing?)
+      |> assign_positions_and_scores()
 
     assign(socket,
       game: game,
       players: players,
       user_player: user_player,
+      playable_cards: playable_cards,
       can_start_game?: can_start_game?,
-      playable_cards: playable_cards
+      can_join_game?: can_join_game?
     )
   end
 
@@ -173,7 +192,7 @@ defmodule GolfWeb.GameLive do
 
   defp maybe_rotate(players, user_index, user_is_playing?)
        when user_is_playing? do
-    rotate(players, user_index)
+    rotate(players, user_index) |> IO.inspect(label: "ROTATE")
   end
 
   defp maybe_rotate(players, _, _), do: players
