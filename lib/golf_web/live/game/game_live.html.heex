@@ -26,6 +26,14 @@
     />
 
     <.player_info name={player.username} score={player.score} position={player.position} />
+
+    <text :if={@game.status == :init} class="waiting-message">
+      Waiting for host to start game.
+    </text>
+
+    <text :if={@game.status == :over} class="game-over-message">
+      Game Over
+    </text>
   <% end %>
 </svg>
 

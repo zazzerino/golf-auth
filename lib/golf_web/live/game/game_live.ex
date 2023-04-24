@@ -38,7 +38,7 @@ defmodule GolfWeb.GameLive do
 
   @impl true
   def handle_info({:get_game, game_id}, socket) do
-    game = Games.get_game_and_players(game_id)
+    game = Games.get_game_and_players_and_event(game_id)
     {:noreply, assign_game_data(socket, game)}
   end
 
@@ -73,33 +73,21 @@ defmodule GolfWeb.GameLive do
          index <- String.to_integer(value["index"]),
          card <- String.to_existing_atom("hand_#{index}"),
          true <- player_id == user_player.id,
-         true <- card in playable_cards do
-      case game.status do
-        s when s in [:flip2, :flip] ->
-          unless Map.has_key?(value, "face-up") do
-            event = %Event{
-              game_id: game.id,
-              player_id: user_player.id,
-              action: :flip,
-              hand_index: index
-            }
-
-            {:ok, _} = Games.handle_game_event(game, user_player, event)
-          end
-
-        :hold ->
-          event = %Event{
-            game_id: game.id,
-            player_id: user_player.id,
-            action: :swap,
-            hand_index: index
-          }
-
-          {:ok, _} = Games.handle_game_event(game, user_player, event)
-      end
+         true <- card in playable_cards,
+         event <- held_click_event(game, user_player, index),
+         {:ok, _} <- Games.handle_game_event(game, user_player, event) do
+      {:noreply, socket}
     end
+  end
 
-    {:noreply, socket}
+  defp held_click_event(game, player, hand_index) do
+    case game.status do
+      s when s in [:flip2, :flip] ->
+        Event.flip(game.id, player.id, hand_index)
+
+      :hold ->
+        Event.swap(game.id, player.id, hand_index)
+    end
   end
 
   @impl true
@@ -109,7 +97,7 @@ defmodule GolfWeb.GameLive do
         %{assigns: %{user_player: player, game: game}} = socket
       )
       when is_struct(player) do
-    event = %Event{game_id: game.id, player_id: player.id, action: :take_from_deck}
+    event = Event.take_from_deck(game.id, player.id)
     Games.handle_game_event(game, player, event)
     {:noreply, socket}
   end
@@ -121,7 +109,7 @@ defmodule GolfWeb.GameLive do
         %{assigns: %{user_player: player, game: game}} = socket
       )
       when is_struct(player) do
-    event = %Event{game_id: game.id, player_id: player.id, action: :take_from_table}
+    event = Event.take_from_table(game.id, player.id)
     Games.handle_game_event(game, player, event)
     {:noreply, socket}
   end
@@ -133,7 +121,7 @@ defmodule GolfWeb.GameLive do
         %{assigns: %{user_player: player, game: game}} = socket
       )
       when is_struct(player) do
-    event = %Event{game_id: game.id, player_id: player.id, action: :discard}
+    event = Event.discard(game.id, player.id)
     Games.handle_game_event(game, player, event)
     {:noreply, socket}
   end
@@ -192,7 +180,7 @@ defmodule GolfWeb.GameLive do
 
   defp maybe_rotate(players, user_index, user_is_playing?)
        when user_is_playing? do
-    rotate(players, user_index) |> IO.inspect(label: "ROTATE")
+    rotate(players, user_index)
   end
 
   defp maybe_rotate(players, _, _), do: players

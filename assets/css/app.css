@@ -116,7 +116,6 @@ g.hand.right {
              rotate(270deg);
 }
 
-/*
 .game-svg text {
   text-anchor: middle;
   dominant-baseline: middle;
@@ -132,6 +131,7 @@ g.hand.right {
   font-size: 500%;
 }
 
+/*
 #use-table-cards {
   pointer-events: none;
 }

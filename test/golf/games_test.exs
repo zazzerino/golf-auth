@@ -13,6 +13,9 @@ defmodule Golf.GamesTest do
       {:ok, %{game: game}} = Games.create_game(user)
       assert game.status == :init
 
+      Games.get_game_and_players_and_event(game.id)
+      |> IO.inspect()
+
       # game = Games.get_game(game.id, preloads: [:players])
       # {:ok, %{game: game}} = Games.start_game(game)
       # assert game.status == :flip2

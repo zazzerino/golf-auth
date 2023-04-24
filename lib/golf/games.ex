@@ -23,7 +23,7 @@ defmodule Golf.Games do
   def max_players, do: @max_players
 
   def broadcast_game(game_id) when is_integer(game_id) do
-    game = get_game_and_players(game_id)
+    game = get_game_and_players_and_event(game_id)
 
     Phoenix.PubSub.broadcast(
       Golf.PubSub,
@@ -213,7 +213,7 @@ defmodule Golf.Games do
     |> Repo.preload(preloads)
   end
 
-  def get_game_and_players(game_id) do
+  def get_game_and_players_and_event(game_id) do
     player_query =
       from(
         p in Player,
@@ -224,8 +224,17 @@ defmodule Golf.Games do
         select: %Player{p | username: u.username}
       )
 
+    event_query =
+      from(
+        e in Event,
+        where: e.game_id == ^game_id,
+        order_by: [desc: e.inserted_at],
+        limit: 1
+      )
+
     Repo.get(Game, game_id)
     |> Repo.preload(players: player_query)
+    |> Repo.preload(events: event_query)
   end
 
   def get_game_infos() do
@@ -292,7 +301,7 @@ defmodule Golf.Games do
       Enum.map(card_names, fn name -> %{"name" => name, "face_up?" => false} end)
       |> Enum.chunk_every(@hand_size)
 
-    {:ok, %{game: game} = multi} =
+    {:ok, multi} =
       Ecto.Multi.new()
       |> Ecto.Multi.update(
         :game,
