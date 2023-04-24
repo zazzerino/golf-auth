@@ -44,14 +44,27 @@ defmodule GolfWeb.GameComponents do
   def deck_x(:init), do: 0
   def deck_x(_), do: -@card_width / 2
 
+  def deck_class(game_status, playable?) do
+    case {game_status, playable?} do
+      {:init, _} ->
+        "deck slide-from-top"
+
+      {_, true} ->
+        "deck highlight"
+
+      _ ->
+        "deck"
+    end
+  end
+
   attr :game_status, :atom, required: true
   attr :playable, :boolean, required: true
 
   def deck(assigns) do
     ~H"""
     <.card_image
-      class={if @playable, do: "highlight"}
       name={card_back()}
+      class={deck_class(@game_status, @playable)}
       x={deck_x(@game_status)}
       phx-value-playable={@playable}
       phx-click="deck_click"
@@ -61,14 +74,37 @@ defmodule GolfWeb.GameComponents do
 
   def table_card_x, do: @card_width / 2
 
+  def table_card_class(event, playable?) do
+    case {event.action, playable?} do
+      {:discard, true} ->
+        "table highlight slide-from-held-#{event.position}"
+
+      {:discard, _} ->
+        "table slide-from-held-#{event.position}"
+
+      # {:swap, true} ->
+      #   "table highlight slide-from-hand-#{event.hand_index}-#{event.position}"
+
+      # {:swap, _} ->
+      #   "table slide-from-hand-#{event.hand_index}-#{event.position}"
+
+      {_, true} ->
+        "table highlight"
+
+      _ ->
+        "table"
+    end
+  end
+
   attr :name, :string, required: true
   attr :playable, :boolean, required: true
+  attr :event, :map, required: true
 
   def table_card_0(assigns) do
     ~H"""
     <.card_image
       :if={@name}
-      class={if @playable, do: "highlight"}
+      class={table_card_class(@event, @playable)}
       name={@name}
       x={table_card_x()}
       phx-value-playable={@playable}
@@ -88,12 +124,13 @@ defmodule GolfWeb.GameComponents do
   attr :first, :string, required: true
   attr :second, :string, required: true
   attr :playable, :boolean, required: true
+  attr :event, :map, required: true
 
   def table_cards(assigns) do
     ~H"""
     <g id="table-cards">
       <.table_card_1 name={@second} />
-      <.table_card_0 name={@first} playable={@playable} />
+      <.table_card_0 name={@first} playable={@playable} event={@event} />
     </g>
     """
   end
@@ -159,22 +196,38 @@ defmodule GolfWeb.GameComponents do
     """
   end
 
-  def held_card_class(position, playable?) do
-    if playable? do
-      "held #{position} highlight"
-    else
-      "held #{position}"
+  def held_card_class(position, event, playable?) do
+    case {event.action, playable?} do
+      {:take_from_deck, true} ->
+        "held #{position} highlight slide-from-deck"
+
+      {:take_from_deck, _} ->
+        "held #{position} slide-from-deck"
+
+      {:take_from_table, true} ->
+        "held #{position} highlight slide-from-table"
+
+      {:take_from_table, _} ->
+        "held #{position} slide-from-table"
+
+      {_, true} ->
+        "held #{position} highlight"
+
+      _ ->
+        "held #{position}"
     end
   end
 
   attr :name, :string, required: true
   attr :position, :atom, required: true
   attr :playable, :boolean, required: true
+  attr :event, :map, required: true
 
   def held_card(assigns) do
+    IO.inspect(assigns, label: "HELD ASSIGNS")
     ~H"""
     <.card_image
-      class={held_card_class(@position, @playable)}
+      class={held_card_class(@position, @event, @playable)}
       name={@name}
       phx-value-playable={@playable}
       phx-click="held_click"

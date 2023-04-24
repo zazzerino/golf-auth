@@ -22,10 +22,12 @@ defmodule GolfWeb.GameLive do
          game_id: game_id,
          game: nil,
          players: [],
+         event: nil,
          playable_cards: [],
          user_player: nil,
-         can_start_game?: false,
-         can_join_game?: false
+         draw_table_cards_last?: nil,
+         can_start_game?: nil,
+         can_join_game?: nil
        )}
     else
       _ ->
@@ -77,16 +79,6 @@ defmodule GolfWeb.GameLive do
          event <- held_click_event(game, user_player, index),
          {:ok, _} <- Games.handle_game_event(game, user_player, event) do
       {:noreply, socket}
-    end
-  end
-
-  defp held_click_event(game, player, hand_index) do
-    case game.status do
-      s when s in [:flip2, :flip] ->
-        Event.flip(game.id, player.id, hand_index)
-
-      :hold ->
-        Event.swap(game.id, player.id, hand_index)
     end
   end
 
@@ -142,35 +134,47 @@ defmodule GolfWeb.GameLive do
         []
       end
 
+    positions = hand_positions(length(game.players))
+
     players =
       game.players
       |> maybe_rotate(user_index, user_is_playing?)
-      |> assign_positions_and_scores()
+      |> assign_positions_and_scores(positions)
+
+    event = get_recent_event(game.events, players)
+    draw_table_cards_last? = event && event.action not in [:take_from_deck, :take_from_table]
 
     assign(socket,
       game: game,
       players: players,
+      event: event,
       user_player: user_player,
       playable_cards: playable_cards,
+      draw_table_cards_last?: draw_table_cards_last?,
       can_start_game?: can_start_game?,
       can_join_game?: can_join_game?
     )
   end
 
   defp assign_game_data(socket, game) do
+    positions = hand_positions(length(game.players))
+
     players =
       game.players
-      |> assign_positions_and_scores()
+      |> assign_positions_and_scores(positions)
+
+    event = get_recent_event(game.events, players)
+    draw_table_cards_last? = event && event.action not in [:take_from_deck, :take_from_table]
 
     assign(socket,
       game: game,
-      players: players
+      players: players,
+      event: event,
+      draw_table_cards_last?: draw_table_cards_last?
     )
   end
 
-  defp assign_positions_and_scores(players) do
-    positions = hand_positions(length(players))
-
+  defp assign_positions_and_scores(players, positions) do
     Enum.zip_with(players, positions, fn player, position ->
       player
       |> Map.put(:position, position)
@@ -178,11 +182,30 @@ defmodule GolfWeb.GameLive do
     end)
   end
 
-  defp maybe_rotate(players, user_index, user_is_playing?)
-       when user_is_playing? do
-    rotate(players, user_index)
+  defp get_recent_event(events, players) do
+    events
+    |> List.first()
+    |> maybe_put_position(players)
   end
 
+  defp maybe_put_position(event, _) when is_nil(event), do: nil
+
+  defp maybe_put_position(event, players) do
+    player = Enum.find(players, fn p -> p.id == event.player_id end)
+    Map.put(event, :position, player.position)
+  end
+
+  defp held_click_event(game, player, hand_index) do
+    case game.status do
+      s when s in [:flip2, :flip] ->
+        Event.flip(game.id, player.id, hand_index)
+
+      :hold ->
+        Event.swap(game.id, player.id, hand_index)
+    end
+  end
+
+  defp maybe_rotate(players, index, true), do: rotate(players, index)
   defp maybe_rotate(players, _, _), do: players
 
   defp rotate(list, 0), do: list

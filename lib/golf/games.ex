@@ -189,18 +189,18 @@ defmodule Golf.Games do
         total
 
       _ ->
-        Enum.reject(ranks, &is_nil/1)
-        |> Enum.map(&rank_value/1)
+        ranks
+        |> Enum.reject(&is_nil/1)
         |> Enum.sum()
         |> Kernel.+(total)
     end
   end
 
-  defp maybe_rank(%{"name" => <<rank, _>>, "face_up?" => true}), do: rank
-  defp maybe_rank(_), do: nil
+  defp maybe_rank_value(%{"name" => <<rank, _>>, "face_up?" => true}), do: rank_value(rank)
+  defp maybe_rank_value(_), do: nil
 
   def score(hand) do
-    Enum.map(hand, &maybe_rank/1)
+    Enum.map(hand, &maybe_rank_value/1)
     |> rank_totals(0)
   end
 
@@ -245,7 +245,8 @@ defmodule Golf.Games do
       where: p.host?,
       join: u in User,
       on: u.id == p.user_id,
-      select: %{id: g.id, host_id: u.id, host_username: u.username}
+      order_by: g.inserted_at,
+      select: %{id: g.id, created_at: g.inserted_at, host_id: u.id, host_username: u.username}
     )
     |> Repo.all()
   end

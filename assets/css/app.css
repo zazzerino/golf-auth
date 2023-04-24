@@ -5,13 +5,13 @@
 /* This file is for your main application CSS */
 
 :root {
+  --animation-time: 1.5s;
+
   --game-width: 600px;
   --game-height: 600px;
 
   --card-width: 60px;
   --card-height: 84px;
-
-  --animation-time: 1.5s;
 
   --deck-x: calc(var(--card-width) / -2);
   --deck-y: 0px;
@@ -131,19 +131,22 @@ g.hand.right {
   font-size: 500%;
 }
 
-/*
 #use-table-cards {
   pointer-events: none;
 }
 
-@keyframes deal-deck {
+@keyframes slide-deck-from-top {
   from {
     transform: translateY(calc(var(--game-height) / -2)) rotate(90deg);
   }
 }
 
-.card.deck.deal {
-  animation: deal-deck var(--animation-time);
+.card.deck.slide-from-top {
+  animation: slide-deck-from-top var(--animation-time);
+}
+
+.card.table.slide-from-hand-5-right {
+  animation: slide-from-hand-5-right var(--animation-time);
 }
 
 @keyframes slide-from-deck {
@@ -483,8 +486,3 @@ g.hand.right {
                rotate(90deg);
   }
 }
-
-.card.table.slide-from-hand-5-right {
-  animation: slide-from-hand-5-right var(--animation-time);
-}
-*/
