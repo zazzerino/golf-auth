@@ -33,7 +33,8 @@ defmodule Golf.Games do
     )
   end
 
-  def broadcast_chat_message(%ChatMessage{game_id: game_id} = message, username) when is_integer(game_id) do
+  def broadcast_chat_message(%ChatMessage{game_id: game_id} = message, username)
+      when is_integer(game_id) do
     Phoenix.PubSub.broadcast(
       Golf.PubSub,
       "game:#{game_id}",
@@ -74,14 +75,18 @@ defmodule Golf.Games do
 
   defguard is_players_turn(game, player) when rem(game.turn, length(game.players)) == player.turn
 
-  def flip_card(hand, index) do
+  defp flip_card(hand, index) do
     List.update_at(hand, index, fn card -> Map.put(card, "face_up?", true) end)
   end
 
-  def swap_card(hand, card_name, index) do
+  defp swap_card(hand, card_name, index) do
     old_card = Enum.at(hand, index) |> Map.get("name")
     hand = List.replace_at(hand, index, %{"name" => card_name, "face_up?" => true})
     {old_card, hand}
+  end
+
+  defp flip_all(hand) do
+    Enum.map(hand, fn card -> Map.put(card, "face_up?", true) end)
   end
 
   defp num_cards_face_up(hand) do
@@ -104,7 +109,7 @@ defmodule Golf.Games do
     Enum.all?(players, fn p -> all_face_up?(p.hand) end)
   end
 
-  def face_down_cards(hand) do
+  defp face_down_cards(hand) do
     hand
     |> Enum.with_index()
     |> Enum.reject(fn {card, _} -> card["face_up?"] end)
@@ -125,10 +130,10 @@ defmodule Golf.Games do
       s when s in [:flip2, :flip] ->
         face_down_cards(player.hand)
 
-      :take ->
+      s when s in [:take, :last_take] ->
         [:deck, :table]
 
-      :hold ->
+      s when s in [:hold, :last_hold] ->
         [:held, :hand_0, :hand_1, :hand_2, :hand_3, :hand_4, :hand_5]
 
       _ ->
@@ -270,10 +275,19 @@ defmodule Golf.Games do
     |> Repo.all()
   end
 
-  def get_player(game_id, user_id) do
+  def get_player(player_id) do
+    Repo.get(Player, player_id)
+  end
+
+  def get_player_by_game_and_user_id(game_id, user_id) do
     from(p in Player, where: p.game_id == ^game_id and p.user_id == ^user_id)
     |> Repo.one()
     |> Repo.preload(:user)
+  end
+
+  def get_players(game_id) do
+    from(p in Player, where: p.game_id == ^game_id)
+    |> Repo.all()
   end
 
   def game_exists?(game_id) when is_integer(game_id) do
@@ -437,6 +451,24 @@ defmodule Golf.Games do
   end
 
   def handle_game_event(
+        %Game{status: :last_take} = game,
+        %Player{} = player,
+        %Event{action: :take_from_deck} = event
+      ) do
+    {:ok, card, deck} = deal_from_deck(game.deck)
+
+    {:ok, multi} =
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(:event, event)
+      |> Ecto.Multi.update(:player, Player.changeset(player, %{held_card: card}))
+      |> Ecto.Multi.update(:game, Game.changeset(game, %{status: :last_hold, deck: deck}))
+      |> Repo.transaction()
+
+    broadcast_game(game.id)
+    {:ok, multi}
+  end
+
+  def handle_game_event(
         %Game{status: :take} = game,
         %Player{} = player,
         %Event{action: :take_from_table} = event
@@ -450,6 +482,27 @@ defmodule Golf.Games do
       |> Ecto.Multi.update(
         :game,
         Game.changeset(game, %{status: :hold, table_cards: table_cards})
+      )
+      |> Repo.transaction()
+
+    broadcast_game(game.id)
+    {:ok, multi}
+  end
+
+  def handle_game_event(
+        %Game{status: :last_take} = game,
+        %Player{} = player,
+        %Event{action: :take_from_table} = event
+      ) do
+    [card | table_cards] = game.table_cards
+
+    {:ok, multi} =
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(:event, event)
+      |> Ecto.Multi.update(:player, Player.changeset(player, %{held_card: card}))
+      |> Ecto.Multi.update(
+        :game,
+        Game.changeset(game, %{status: :last_hold, table_cards: table_cards})
       )
       |> Repo.transaction()
 
@@ -488,11 +541,41 @@ defmodule Golf.Games do
   end
 
   def handle_game_event(
+        %Game{status: :last_hold} = game,
+        %Player{} = player,
+        %Event{action: :discard} = event
+      ) do
+    card = player.held_card
+    table_cards = [card | game.table_cards]
+
+    other_players = Enum.reject(game.players, fn p -> p.id == player.id end)
+
+    {status, turn, hand} =
+      if all_players_all_flipped?(other_players) do
+        {:over, game.turn, flip_all(player.hand)}
+      else
+        {:last_take, game.turn + 1, player.hand}
+      end
+
+    {:ok, multi} =
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(:event, event)
+      |> Ecto.Multi.update(:player, Player.changeset(player, %{held_card: nil, hand: hand}))
+      |> Ecto.Multi.update(
+        :game,
+        Game.changeset(game, %{status: status, table_cards: table_cards, turn: turn})
+      )
+      |> Repo.transaction()
+
+    broadcast_game(game.id)
+    {:ok, multi}
+  end
+
+  def handle_game_event(
         %Game{status: :hold} = game,
         %Player{} = player,
         %Event{action: :swap} = event
-      )
-      when is_struct(player) do
+      ) do
     {card, hand} = swap_card(player.hand, player.held_card, event.hand_index)
     table_cards = [card | game.table_cards]
 

@@ -7,41 +7,198 @@ defmodule Golf.GamesTest do
   describe "games" do
     alias Golf.Games.Game
 
-    test "create_game/1" do
-      user = user_fixture()
-
-      {:ok, %{game: game}} = Games.create_game(user)
-      assert game.status == :init
-
-      Games.get_game_and_players_and_event(game.id)
-      |> IO.inspect()
-
-      # game = Games.get_game(game.id, preloads: [:players])
-      # {:ok, %{game: game}} = Games.start_game(game)
-      # assert game.status == :flip2
-
-      # player = Games.get_player(game.id, user.id)
-      # event = %Event{game_id: game.id, player_id: player.id, action: :flip, hand_index: 0}
-      # {:ok, _} = Games.handle_game_event(game, player, event)
-
-      # Games.get_game(game.id, preloads: [players: :user])
-      # |> IO.inspect()
+    defp get_game(game_id) do
+      Games.get_game_players_event(game_id)
     end
 
     test "two players" do
-      # user0 = user_fixture()
-      # user1 = user_fixture()
+      user0 = user_fixture()
+      user1 = user_fixture()
 
-      # {:ok, %{game: game}} = Games.create_game(user1)
+      {:ok, %{game: game, player: player0}} = Games.create_game(user0)
 
-      # game = Games.get_game(game.id, preloads: [players: :user])
+      game = get_game(game.id)
+      {:ok, player1} = Games.add_player_to_game(game, user1)
 
-      # {:ok, player} =
-      #   Games.add_player_to_game(game, user0)
-      #   |> IO.inspect()
+      game = get_game(game.id)
+      assert game.status == :init
 
-      # Games.get_game(game.id, preloads: [players: :user])
-      # |> IO.inspect()
+      {:ok, _} = Games.start_game(game)
+
+      player0 = Games.get_player(player0.id)
+      player1 = Games.get_player(player1.id)
+
+      game = get_game(game.id)
+      assert game.status == :flip2
+
+      # card 0
+
+      event = Event.flip(game.id, player0.id, 0)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :flip2
+
+      game = get_game(game.id)
+      event = Event.flip(game.id, player1.id, 0)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :flip2
+
+      # card 1
+
+      game = get_game(game.id)
+      event = Event.flip(game.id, player0.id, 1)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :flip2
+
+      game = get_game(game.id)
+      event = Event.flip(game.id, player1.id, 1)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      # card 2
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.take_from_deck(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.discard(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :flip
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.flip(game.id, player0.id, 2)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.take_from_table(game.id, player1.id)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.swap(game.id, player1.id, 2)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 0
+
+      # card 3
+
+      game = get_game(game.id)
+      event = Event.take_from_table(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.swap(game.id, player0.id, 3)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.take_from_deck(game.id, player1.id)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.swap(game.id, player1.id, 3)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 0
+
+      # card 4
+
+      game = get_game(game.id)
+      event = Event.take_from_table(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.swap(game.id, player0.id, 4)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.take_from_deck(game.id, player1.id)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.swap(game.id, player1.id, 4)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 0
+
+      # card 5
+
+      game = get_game(game.id)
+      event = Event.take_from_deck(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.discard(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :take
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.take_from_table(game.id, player1.id)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :hold
+      assert Games.current_player_turn(game) == 1
+
+      game = get_game(game.id)
+      event = Event.swap(game.id, player1.id, 5)
+      {:ok, %{game: game, player: player1}} = Games.handle_game_event(game, player1, event)
+
+      assert game.status == :last_take
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.take_from_deck(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      assert game.status == :last_hold
+      assert Games.current_player_turn(game) == 0
+
+      game = get_game(game.id)
+      event = Event.discard(game.id, player0.id)
+      {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
+
+      get_game(game.id)
+      |> IO.inspect()
     end
   end
 

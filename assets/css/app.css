@@ -137,8 +137,9 @@ g.hand.right {
 
 #game-chat {
   width: var(--game-width);
-  outline: solid 0.1rem #eaeaea;
   margin-top: 1rem;
+  outline: solid 0.1rem #eaeaea;
+  padding: 2rem;
 }
 
 #game-chat > form {
@@ -146,8 +147,8 @@ g.hand.right {
   padding-top: 0;
 }
 
-.game-chat-messages {
-  max-height: 150px;
+#game-chat-messages {
+  max-height: 120px;
   overflow: scroll;
   padding-bottom: 0;
 }

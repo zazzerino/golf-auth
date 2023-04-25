@@ -229,6 +229,7 @@ defmodule GolfWeb.GameComponents do
 
   def held_card(assigns) do
     IO.inspect(assigns, label: "HELD ASSIGNS")
+
     ~H"""
     <.card_image
       class={held_card_class(@position, @event, @playable)}
@@ -277,11 +278,7 @@ defmodule GolfWeb.GameComponents do
   def game_chat(assigns) do
     ~H"""
     <div id="game-chat">
-      <div
-        id="game-chat-messages"
-        phx-update="append"
-        phx-hook="ChatMessages"
-      >
+      <div id="game-chat-messages" phx-update="append" phx-hook="ChatMessages">
         <.chat_message
           :for={message <- @messages}
           id={"message-#{message.id}"}
@@ -290,15 +287,8 @@ defmodule GolfWeb.GameComponents do
         />
       </div>
 
-      <.simple_form
-        for={@form}
-        phx-change="validate_chat_message"
-        phx-submit="send_chat_message"
-      >
-        <.input
-          field={@form[:content]}
-          placeholder="Enter chat message"
-        />
+      <.simple_form for={@form} phx-change="validate_chat_message" phx-submit="send_chat_message">
+        <.input field={@form[:content]} placeholder="Enter chat message" />
 
         <:actions>
           <.button>Send Message</.button>

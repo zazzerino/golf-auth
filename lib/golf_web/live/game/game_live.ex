@@ -57,8 +57,7 @@ defmodule GolfWeb.GameLive do
 
   @impl true
   def handle_info({:chat_message, message}, socket) do
-    {:noreply,
-      update(socket, :chat_messages, fn messages -> [message | messages] end)}
+    {:noreply, update(socket, :chat_messages, fn messages -> [message | messages] end)}
   end
 
   @impl true
@@ -150,7 +149,12 @@ defmodule GolfWeb.GameLive do
       when is_struct(user) do
     changeset =
       %ChatMessage{}
-      |> ChatMessage.changeset(%{game_id: game_id, user_id: user.id, username: user.username, content: content})
+      |> ChatMessage.changeset(%{
+        game_id: game_id,
+        user_id: user.id,
+        username: user.username,
+        content: content
+      })
 
     if changeset.valid? do
       {:ok, message} = Ecto.Changeset.apply_action(changeset, :insert)

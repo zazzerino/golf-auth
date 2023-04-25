@@ -4,7 +4,7 @@ defmodule Golf.Games.Game do
 
   schema "games" do
     field :status, Ecto.Enum,
-      values: [:init, :flip2, :take, :hold, :flip, :last_take, :last_hold, :last_flip, :over]
+      values: [:init, :flip2, :take, :hold, :flip, :last_take, :last_hold, :over]
 
     field :deck, {:array, :string}
     field :table_cards, {:array, :string}

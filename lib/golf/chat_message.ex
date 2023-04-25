@@ -8,7 +8,7 @@ defmodule Golf.ChatMessage do
 
     field :content, :string
 
-    field :username, :string
+    field :username, :string, virtual: true
 
     timestamps(updated_at: false)
   end

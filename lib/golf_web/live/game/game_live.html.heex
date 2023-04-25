@@ -1,13 +1,7 @@
 <.header>Game <%= @game_id %></.header>
 
-<svg
-  :if={@game}
-  class="game-svg"
-  width={game_width()}
-  height={game_height()}
-  viewBox={game_viewbox()}
->
-  <.deck game_status={@game.status} playable={:deck in @playable_cards} />
+<svg class="game-svg" width={game_width()} height={game_height()} viewBox={game_viewbox()}>
+  <.deck :if={@game} game_status={@game.status} playable={:deck in @playable_cards} />
 
   <.table_cards
     first={@game && Enum.at(@game.table_cards, 0)}
@@ -38,11 +32,11 @@
 
   <use :if={@draw_table_cards_last?} id="use-table-cards" href="#table-cards" />
 
-  <text :if={@game.status == :init} class="waiting-message">
+  <text :if={@game && @game.status == :init} class="waiting-message">
     Waiting for host to start game.
   </text>
 
-  <text :if={@game.status == :over} class="game-over-message">
+  <text :if={@game && @game.status == :over} class="game-over-message">
     Game Over
   </text>
 </svg>
