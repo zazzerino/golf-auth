@@ -135,13 +135,13 @@ g.hand.right {
   pointer-events: none;
 }
 
-.game-chat {
+#game-chat {
   width: var(--game-width);
   outline: solid 0.1rem #eaeaea;
   margin-top: 1rem;
 }
 
-.game-chat > form {
+#game-chat > form {
   margin-top: 0;
   padding-top: 0;
 }

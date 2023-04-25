@@ -74,7 +74,7 @@ defmodule GolfWeb.GameComponents do
 
   def table_card_x, do: @card_width / 2
 
-  def table_card_class(event, playable?) do
+  def table_card_class(event, playable?) when is_struct(event) do
     case {event.action, playable?} do
       {:discard, true} ->
         "table highlight slide-from-held-#{event.position}"
@@ -95,6 +95,8 @@ defmodule GolfWeb.GameComponents do
         "table"
     end
   end
+
+  def table_card_class(_, _), do: "table"
 
   attr :name, :string, required: true
   attr :playable, :boolean, required: true
@@ -196,7 +198,7 @@ defmodule GolfWeb.GameComponents do
     """
   end
 
-  def held_card_class(position, event, playable?) do
+  def held_card_class(position, event, playable?) when is_struct(event) do
     case {event.action, playable?} do
       {:take_from_deck, true} ->
         "held #{position} highlight slide-from-deck"
@@ -217,6 +219,8 @@ defmodule GolfWeb.GameComponents do
         "held #{position}"
     end
   end
+
+  def held_card_class(position, _, _), do: "held #{position}"
 
   attr :name, :string, required: true
   attr :position, :atom, required: true
@@ -249,12 +253,13 @@ defmodule GolfWeb.GameComponents do
     """
   end
 
+  attr :id, :any, required: true
   attr :username, :string, required: true
   attr :content, :string, required: true
 
   def chat_message(assigns) do
     ~H"""
-    <div class="game-chat-message">
+    <div id={@id} class="game-chat-message">
       <span class="game-chat-message-username">
         <%= @username %>:
       </span>
@@ -271,14 +276,15 @@ defmodule GolfWeb.GameComponents do
 
   def game_chat(assigns) do
     ~H"""
-    <div class="game-chat">
+    <div id="game-chat">
       <div
         id="game-chat-messages"
-        class="game-chat-messages"
+        phx-update="append"
         phx-hook="ChatMessages"
       >
         <.chat_message
           :for={message <- @messages}
+          id={"message-#{message.id}"}
           username={message.username}
           content={message.content}
         />
@@ -302,10 +308,3 @@ defmodule GolfWeb.GameComponents do
     """
   end
 end
-
-        # <.input
-        #   id="game-chat-input"
-        #   name="chat-input"
-        #   value=""
-        #   placeholder="Enter chat message"
-        # />

@@ -14,8 +14,10 @@ defmodule GolfWeb.GameLive do
          true <- Games.game_exists?(game_id) do
       if connected?(socket) do
         Phoenix.PubSub.subscribe(Golf.PubSub, "game:#{game_id}")
-        send(self(), {:get_game, game_id})
+        send(self(), {:load_data, game_id})
       end
+
+      chat_messages = Games.get_chat_messages(game_id)
 
       {:ok,
        assign(socket,
@@ -24,14 +26,14 @@ defmodule GolfWeb.GameLive do
          game: nil,
          players: [],
          event: nil,
-         chat_messages: [],
          playable_cards: [],
          user_player: nil,
          draw_table_cards_last?: nil,
          can_start_game?: nil,
          can_join_game?: nil,
-        #  chat_message: %ChatMessage{}
-         chat_form: to_form(ChatMessage.content_changeset(%ChatMessage{}, %{}))
+         chat_messages: chat_messages,
+         chat_form: to_form(ChatMessage.content_changeset(%ChatMessage{}, %{})),
+         temporary_assigns: [chat_messages: []]
        )}
     else
       _ ->
@@ -43,14 +45,20 @@ defmodule GolfWeb.GameLive do
   end
 
   @impl true
-  def handle_info({:get_game, game_id}, socket) do
-    game = Games.get_game_players_event_and_messages(game_id)
+  def handle_info({:load_data, game_id}, socket) do
+    game = Games.get_game_players_event(game_id)
     {:noreply, assign_game_data(socket, game)}
   end
 
   @impl true
   def handle_info({:game, game}, socket) do
     {:noreply, assign_game_data(socket, game)}
+  end
+
+  @impl true
+  def handle_info({:chat_message, message}, socket) do
+    {:noreply,
+      update(socket, :chat_messages, fn messages -> [message | messages] end)}
   end
 
   @impl true
@@ -142,11 +150,11 @@ defmodule GolfWeb.GameLive do
       when is_struct(user) do
     changeset =
       %ChatMessage{}
-      |> ChatMessage.changeset(%{game_id: game_id, user_id: user.id, content: content})
+      |> ChatMessage.changeset(%{game_id: game_id, user_id: user.id, username: user.username, content: content})
 
     if changeset.valid? do
       {:ok, message} = Ecto.Changeset.apply_action(changeset, :insert)
-      {:ok, _} = Games.insert_chat_message(message)
+      {:ok, _} = Games.insert_chat_message(message, user.username)
     end
 
     chat_form =
@@ -187,7 +195,6 @@ defmodule GolfWeb.GameLive do
       game: game,
       players: players,
       event: event,
-      chat_messages: game.chat_messages,
       user_player: user_player,
       playable_cards: playable_cards,
       draw_table_cards_last?: draw_table_cards_last?,
@@ -210,7 +217,6 @@ defmodule GolfWeb.GameLive do
       game: game,
       players: players,
       event: event,
-      chat_messages: game.chat_messages,
       draw_table_cards_last?: draw_table_cards_last?
     )
   end
