@@ -95,6 +95,24 @@ defmodule Golf.Accounts do
 
   ## Settings
 
+  def change_user_username(user, attrs \\ %{}) do
+    User.username_changeset(user, attrs)
+  end
+
+  def apply_user_username(user, password, attrs) do
+    user
+    |> User.username_changeset(attrs)
+    |> User.validate_current_password(password)
+    |> Ecto.Changeset.apply_action(:update)
+  end
+
+  def update_user_username(user, password, attrs) do
+    user
+    |> User.username_changeset(attrs)
+    |> User.validate_current_password(password)
+    |> Repo.update()
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for changing the user email.
 

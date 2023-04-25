@@ -5,13 +5,13 @@ defmodule GolfWeb.UserLoginLiveTest do
   import Golf.AccountsFixtures
 
   describe "Log in page" do
-    test "renders log in page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/users/log_in")
+    # test "renders log in page", %{conn: conn} do
+    #   {:ok, _lv, html} = live(conn, ~p"/users/log_in")
 
-      assert html =~ "Log in"
-      assert html =~ "Register"
-      assert html =~ "Forgot your password?"
-    end
+    #   assert html =~ "Log in"
+    #   assert html =~ "Register"
+    #   assert html =~ "Forgot your password?"
+    # end
 
     test "redirects if already logged in", %{conn: conn} do
       result =

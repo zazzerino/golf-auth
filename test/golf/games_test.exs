@@ -197,8 +197,10 @@ defmodule Golf.GamesTest do
       event = Event.discard(game.id, player0.id)
       {:ok, %{game: game, player: player0}} = Games.handle_game_event(game, player0, event)
 
-      get_game(game.id)
-      |> IO.inspect()
+      assert game.status == :over
+
+      # get_game(game.id)
+      # |> IO.inspect()
     end
   end
 

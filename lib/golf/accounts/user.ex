@@ -97,6 +97,16 @@ defmodule Golf.Accounts.User do
     end
   end
 
+  def username_changeset(user, attrs, _opts \\ []) do
+    user
+    |> cast(attrs, [:username])
+    |> validate_username()
+    |> case do
+      %{changes: %{username: _}} = changeset -> changeset
+      %{} = changeset -> add_error(changeset, :username, "did not change")
+    end
+  end
+
   @doc """
   A user changeset for changing the email.
 

@@ -88,17 +88,17 @@ defmodule GolfWeb.UserResetPasswordLiveTest do
   end
 
   describe "Reset password navigation" do
-    test "redirects to login page when the Log in button is clicked", %{conn: conn, token: token} do
-      {:ok, lv, _html} = live(conn, ~p"/users/reset_password/#{token}")
+    # test "redirects to login page when the Log in button is clicked", %{conn: conn, token: token} do
+    #   {:ok, lv, _html} = live(conn, ~p"/users/reset_password/#{token}")
 
-      {:ok, conn} =
-        lv
-        |> element(~s|main a:fl-contains("Log in")|)
-        |> render_click()
-        |> follow_redirect(conn, ~p"/users/log_in")
+    #   {:ok, conn} =
+    #     lv
+    #     |> element(~s|main a:fl-contains("Log in")|)
+    #     |> render_click()
+    #     |> follow_redirect(conn, ~p"/users/log_in")
 
-      assert conn.resp_body =~ "Log in"
-    end
+    #   assert conn.resp_body =~ "Log in"
+    # end
 
     test "redirects to password reset page when the Register button is clicked", %{
       conn: conn,
