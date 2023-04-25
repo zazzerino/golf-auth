@@ -1,3 +1,26 @@
+<header class="px-4 sm:px-6 lg:px-8">
+  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
+    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+      <.link href={~p"/"}>Home</.link>
+      <%= if @current_user do %>
+        <.link href={~p"/users/settings"}>
+          Settings
+        </.link>
+        <.link href={~p"/users/log_out"} method="delete">
+          Log Out
+        </.link>
+      <% else %>
+        <.link href={~p"/users/register"}>
+          Register
+        </.link>
+        <.link href={~p"/users/log_in"}>
+          Log In
+        </.link>
+      <% end %>
+    </div>
+  </div>
+</header>
+
 <main class="px-4 py-4 sm:px-6 lg:px-6">
   <div class="mx-auto max-w-2xl">
     <.flash_group flash={@flash} />
