@@ -47,6 +47,8 @@
   </text>
 </svg>
 
+<.game_chat messages={@chat_messages} form={@chat_form} />
+
 <div class="mt-4">
   <.button :if={@can_start_game?} phx-click="start_game">
     Start Game

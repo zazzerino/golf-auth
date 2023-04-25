@@ -248,4 +248,64 @@ defmodule GolfWeb.GameComponents do
     </g>
     """
   end
+
+  attr :username, :string, required: true
+  attr :content, :string, required: true
+
+  def chat_message(assigns) do
+    ~H"""
+    <div class="game-chat-message">
+      <span class="game-chat-message-username">
+        <%= @username %>:
+      </span>
+
+      <span class="game-chat-message-content">
+        <%= @content %>
+      </span>
+    </div>
+    """
+  end
+
+  attr :messages, :list, required: true
+  attr :form, :any, required: true
+
+  def game_chat(assigns) do
+    ~H"""
+    <div class="game-chat">
+      <div
+        id="game-chat-messages"
+        class="game-chat-messages"
+        phx-hook="ChatMessages"
+      >
+        <.chat_message
+          :for={message <- @messages}
+          username={message.username}
+          content={message.content}
+        />
+      </div>
+
+      <.simple_form
+        for={@form}
+        phx-change="validate_chat_message"
+        phx-submit="send_chat_message"
+      >
+        <.input
+          field={@form[:content]}
+          placeholder="Enter chat message"
+        />
+
+        <:actions>
+          <.button>Send Message</.button>
+        </:actions>
+      </.simple_form>
+    </div>
+    """
+  end
 end
+
+        # <.input
+        #   id="game-chat-input"
+        #   name="chat-input"
+        #   value=""
+        #   placeholder="Enter chat message"
+        # />

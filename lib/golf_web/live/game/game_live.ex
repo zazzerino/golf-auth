@@ -4,6 +4,7 @@ defmodule GolfWeb.GameLive do
 
   alias Golf.Games
   alias Golf.Games.Event
+  alias Golf.ChatMessage
 
   @max_players Games.max_players()
 
@@ -23,11 +24,14 @@ defmodule GolfWeb.GameLive do
          game: nil,
          players: [],
          event: nil,
+         chat_messages: [],
          playable_cards: [],
          user_player: nil,
          draw_table_cards_last?: nil,
          can_start_game?: nil,
-         can_join_game?: nil
+         can_join_game?: nil,
+        #  chat_message: %ChatMessage{}
+         chat_form: to_form(ChatMessage.content_changeset(%ChatMessage{}, %{}))
        )}
     else
       _ ->
@@ -40,7 +44,7 @@ defmodule GolfWeb.GameLive do
 
   @impl true
   def handle_info({:get_game, game_id}, socket) do
-    game = Games.get_game_and_players_and_event(game_id)
+    game = Games.get_game_players_event_and_messages(game_id)
     {:noreply, assign_game_data(socket, game)}
   end
 
@@ -118,6 +122,41 @@ defmodule GolfWeb.GameLive do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_event("validate_chat_message", %{"chat_message" => params}, socket) do
+    form =
+      %ChatMessage{}
+      |> ChatMessage.content_changeset(params)
+      |> Map.put(:action, :insert)
+      |> to_form()
+
+    {:noreply, assign(socket, chat_form: form)}
+  end
+
+  @impl true
+  def handle_event(
+        "send_chat_message",
+        %{"chat_message" => %{"content" => content}},
+        %{assigns: %{game_id: game_id, current_user: user}} = socket
+      )
+      when is_struct(user) do
+    changeset =
+      %ChatMessage{}
+      |> ChatMessage.changeset(%{game_id: game_id, user_id: user.id, content: content})
+
+    if changeset.valid? do
+      {:ok, message} = Ecto.Changeset.apply_action(changeset, :insert)
+      {:ok, _} = Games.insert_chat_message(message)
+    end
+
+    chat_form =
+      %ChatMessage{}
+      |> ChatMessage.content_changeset(%{})
+      |> to_form()
+
+    {:noreply, assign(socket, chat_form: chat_form)}
+  end
+
   defp assign_game_data(%{assigns: %{current_user: user}} = socket, game)
        when is_struct(user) do
     user_is_playing? = Games.user_is_playing_game?(user.id, game.id)
@@ -148,6 +187,7 @@ defmodule GolfWeb.GameLive do
       game: game,
       players: players,
       event: event,
+      chat_messages: game.chat_messages,
       user_player: user_player,
       playable_cards: playable_cards,
       draw_table_cards_last?: draw_table_cards_last?,
@@ -170,6 +210,7 @@ defmodule GolfWeb.GameLive do
       game: game,
       players: players,
       event: event,
+      chat_messages: game.chat_messages,
       draw_table_cards_last?: draw_table_cards_last?
     )
   end

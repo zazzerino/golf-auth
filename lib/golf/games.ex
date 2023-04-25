@@ -8,6 +8,7 @@ defmodule Golf.Games do
   alias Golf.Repo
   alias Golf.Accounts.User
   alias Golf.Games.{Game, Player, Event}
+  alias Golf.ChatMessage
 
   @card_names for rank <- ~w(A 2 3 4 5 6 7 8 9 T J Q K),
                   suit <- ~w(C D H S),
@@ -23,7 +24,7 @@ defmodule Golf.Games do
   def max_players, do: @max_players
 
   def broadcast_game(game_id) when is_integer(game_id) do
-    game = get_game_and_players_and_event(game_id)
+    game = get_game_players_event_and_messages(game_id)
 
     Phoenix.PubSub.broadcast(
       Golf.PubSub,
@@ -213,7 +214,7 @@ defmodule Golf.Games do
     |> Repo.preload(preloads)
   end
 
-  def get_game_and_players_and_event(game_id) do
+  def get_game_players_event_and_messages(game_id) do
     player_query =
       from(
         p in Player,
@@ -232,9 +233,18 @@ defmodule Golf.Games do
         limit: 1
       )
 
+    chat_message_query =
+      from(cm in ChatMessage,
+        where: cm.game_id == ^game_id,
+        join: u in User,
+        on: u.id == cm.user_id,
+        select: %ChatMessage{cm | username: u.username}
+      )
+
     Repo.get(Game, game_id)
     |> Repo.preload(players: player_query)
     |> Repo.preload(events: event_query)
+    |> Repo.preload(chat_messages: chat_message_query)
   end
 
   def get_game_infos() do
@@ -289,6 +299,12 @@ defmodule Golf.Games do
 
     broadcast_game(game.id)
     {:ok, player}
+  end
+
+  def insert_chat_message(%ChatMessage{} = message) do
+    {:ok, message} = Repo.insert(message)
+    broadcast_game(message.game_id)
+    {:ok, message}
   end
 
   def start_game(%Game{status: :init} = game) do

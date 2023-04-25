@@ -135,6 +135,28 @@ g.hand.right {
   pointer-events: none;
 }
 
+.game-chat {
+  width: var(--game-width);
+  outline: solid 0.1rem #eaeaea;
+  margin-top: 1rem;
+}
+
+.game-chat > form {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.game-chat-messages {
+  max-height: 150px;
+  overflow: scroll;
+  padding-bottom: 0;
+}
+
+.game-chat-message-username {
+  color: cornflowerblue;
+  font-size: 75%;
+}
+
 @keyframes slide-deck-from-top {
   from {
     transform: translateY(calc(var(--game-height) / -2)) rotate(90deg);
