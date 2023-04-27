@@ -228,8 +228,6 @@ defmodule GolfWeb.GameComponents do
   attr :event, :map, required: true
 
   def held_card(assigns) do
-    IO.inspect(assigns, label: "HELD ASSIGNS")
-
     ~H"""
     <.card_image
       class={held_card_class(@position, @event, @playable)}

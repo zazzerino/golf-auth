@@ -1,57 +1,56 @@
-<.header>Game <%= @game_id %></.header>
+<div class="game-page">
+  <.header class="game-header">Game <%= @game_id %></.header>
 
-<svg class="game-svg" width={game_width()} height={game_height()} viewBox={game_viewbox()}>
-  <.deck :if={@game} game_status={@game.status} playable={:deck in @playable_cards} />
+  <svg class="game-svg" viewBox={game_viewbox()}>
+    <.deck :if={@game} game_status={@game.status} playable={:deck in @playable_cards} />
 
-  <.table_cards
-    first={@game && Enum.at(@game.table_cards, 0)}
-    second={@game && Enum.at(@game.table_cards, 1)}
-    playable={:table in @playable_cards}
-    event={@event}
-  />
-
-  <%= for player <- @players do %>
-    <.hand
-      cards={player.hand}
-      position={player.position}
-      player_id={player.id}
-      user_player_id={@user_player && @user_player.id}
-      playable_cards={@playable_cards}
-    />
-
-    <.held_card
-      :if={player.held_card}
-      name={player.held_card}
-      position={player.position}
-      playable={:held in @playable_cards}
+    <.table_cards
+      first={@game && Enum.at(@game.table_cards, 0)}
+      second={@game && Enum.at(@game.table_cards, 1)}
+      playable={:table in @playable_cards}
       event={@event}
     />
 
-    <.player_info name={player.username} score={player.score} position={player.position} />
-  <% end %>
+    <%= for player <- @players do %>
+      <.hand
+        cards={player.hand}
+        position={player.position}
+        player_id={player.id}
+        user_player_id={@user_player && @user_player.id}
+        playable_cards={@playable_cards}
+      />
 
-  <use :if={@draw_table_cards_last?} id="use-table-cards" href="#table-cards" />
+      <.held_card
+        :if={player.held_card}
+        name={player.held_card}
+        position={player.position}
+        playable={:held in @playable_cards}
+        event={@event}
+      />
 
-  <text :if={@game && @game.status == :init} class="waiting-message">
-    Waiting for host to start game.
-  </text>
+      <.player_info name={player.username} score={player.score} position={player.position} />
+    <% end %>
 
-  <text :if={@game && @game.status == :over} class="game-over-message">
-    Game Over
-  </text>
-</svg>
+    <use :if={@draw_table_cards_last?} id="use-table-cards" href="#table-cards" />
 
-<div class="mt-4">
-  <.button :if={@can_start_game?} phx-click="start_game">
-    Start Game
-  </.button>
+    <text :if={@game && @game.status == :init} class="waiting-message">
+      Waiting for host to start game.
+    </text>
 
-  <.button :if={@can_join_game?} phx-click="join_game">
-    Join Game
-  </.button>
-</div>
+    <text :if={@game && @game.status == :over} class="game-over-message">
+      Game Over
+    </text>
+  </svg>
 
-<div>
-  <.header class="mt-10">Game Chat</.header>
+  <div class="game-controls">
+    <.button :if={@can_start_game?} phx-click="start_game">
+      Start Game
+    </.button>
+
+    <.button :if={@can_join_game?} phx-click="join_game">
+      Join Game
+    </.button>
+  </div>
+
   <.game_chat messages={@chat_messages} form={@chat_form} />
 </div>

@@ -1,4 +1,4 @@
-<header class="px-4 sm:px-6 lg:px-8">
+<header class="px-4 sm:px-6 lg:px-6">
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
       <.link href={~p"/"}>Home</.link>
@@ -22,7 +22,7 @@
 </header>
 
 <main class="px-4 py-4 sm:px-6 lg:px-6">
-  <div class="mx-auto max-w-2xl">
+  <div>
     <.flash_group flash={@flash} />
     <%= @inner_content %>
   </div>

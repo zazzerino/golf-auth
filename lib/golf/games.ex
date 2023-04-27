@@ -247,8 +247,7 @@ defmodule Golf.Games do
       )
 
     Repo.get(Game, game_id)
-    |> Repo.preload(players: player_query)
-    |> Repo.preload(events: event_query)
+    |> Repo.preload([players: player_query, events: event_query])
   end
 
   def get_chat_messages(game_id) do
