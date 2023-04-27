@@ -279,12 +279,6 @@ defmodule Golf.Games do
     Repo.get(Player, player_id)
   end
 
-  def get_player_by_game_and_user_id(game_id, user_id) do
-    from(p in Player, where: p.game_id == ^game_id and p.user_id == ^user_id)
-    |> Repo.one()
-    |> Repo.preload(:user)
-  end
-
   def get_players(game_id) do
     from(p in Player, where: p.game_id == ^game_id)
     |> Repo.all()

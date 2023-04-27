@@ -7,17 +7,17 @@ defmodule Golf.GamesFixtures do
   @doc """
   Generate a game.
   """
-  def game_fixture(attrs \\ %{}) do
-    {:ok, game} =
-      attrs
-      |> Enum.into(%{
-        deck: ["option1", "option2"],
-        status: :init,
-        table_cards: ["option1", "option2"],
-        turn: 42
-      })
-      |> Golf.Games.create_game()
+  # def game_fixture(attrs \\ %{}) do
+  #   {:ok, game} =
+  #     attrs
+  #     |> Enum.into(%{
+  #       deck: ["option1", "option2"],
+  #       status: :init,
+  #       table_cards: ["option1", "option2"],
+  #       turn: 42
+  #     })
+  #     |> Golf.Games.create_game()
 
-    game
-  end
+  #   game
+  # end
 end

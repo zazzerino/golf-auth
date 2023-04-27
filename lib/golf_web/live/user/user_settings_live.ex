@@ -137,7 +137,8 @@ defmodule GolfWeb.UserSettingsLive do
       |> Map.put(:action, :validate)
       |> to_form()
 
-    {:noreply, assign(socket, username_form: username_form, username_form_current_password: password)}
+    {:noreply,
+     assign(socket, username_form: username_form, username_form_current_password: password)}
   end
 
   def handle_event("update_username", params, socket) do

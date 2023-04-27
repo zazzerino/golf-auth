@@ -5,8 +5,6 @@ defmodule Golf.GamesTest do
   alias Golf.Games.{Event}
 
   describe "games" do
-    alias Golf.Games.Game
-
     defp get_game(game_id) do
       Games.get_game_players_event(game_id)
     end
