@@ -151,20 +151,20 @@ g.hand.right {
 }
 
 .player-info.bottom {
-  transform: translate(-25vw, var(--hand-bottom-y));
+  transform: translate(calc(var(--game-width) / -3), var(--hand-bottom-y));
 }
 
 .player-info.left {
-  transform: translate(var(--hand-left-x), -25vw)
+  transform: translate(var(--hand-left-x), calc(var(--game-width) / -3))
              rotate(90deg);
 }
 
 .player-info.top {
-  transform: translate(25vw, var(--hand-top-y));
+  transform: translate(calc(var(--game-width) / 3), var(--hand-top-y));
 }
 
 .player-info.right {
-  transform: translate(var(--hand-right-x), 25vw)
+  transform: translate(var(--hand-right-x), calc(var(--game-width) / 3))
              rotate(270deg);
 }
 
