@@ -2,6 +2,12 @@
   <.header class="game-header">Game <%= @game_id %></.header>
 
   <svg class="game-svg" viewBox={game_viewbox()}>
+    <defs>
+      <filter id="highlight">
+        <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="cyan" />
+      </filter>
+    </defs>
+
     <.deck :if={@game} game_status={@game.status} playable={:deck in @playable_cards} />
 
     <.table_cards

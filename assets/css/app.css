@@ -99,11 +99,15 @@
 }
 
 .card.highlight {
-  transform: translateZ(0);
+  filter: url("#highlight");
+  cursor: pointer;
+}
+
+/* .card.highlight {
   -webkit-filter: drop-shadow(0 0 6px rgba(173, 255, 47, 1.0));
   filter: drop-shadow(0 0 6px rgba(173, 255, 47, 1.0));
   cursor: pointer;
-}
+} */
 
 g.hand.bottom {
   transform: translate(var(--hand-bottom-x), var(--hand-bottom-y));
@@ -187,7 +191,7 @@ g.hand.right {
   pointer-events: none;
 }
 
-@keyframes slide-deck-from-top {
+/* @keyframes slide-deck-from-top {
   from {
     transform: translateY(calc(var(--game-height) / -2)) rotate(90deg);
   }
@@ -273,7 +277,7 @@ g.hand.right {
                          calc(var(--hand-bottom-y) - var(--card-height) / 2));
   }
 }
-/* 
+
 .card.table.slide-from-hand-0-bottom {
   animation: slide-from-hand-0-bottom var(--animation-time);
 }
